@@ -1,18 +1,32 @@
 <?php
 /*
 * $Id: mailer.class.php
-*
-* Simple Mail base class
+* Simple Mail email sending implementation base class
+* @author: Dhens <rudenyl@gmail.c>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
 
 final class Mailer
 {
+	/**
+	Class constructor
+		@public
+	**/
 	function __construct()
 	{
 	}
 
+	/**
+	Mail send short-hand using mail function
+		@param $from string
+		@param $to string
+		@param $subject string
+		@param $message string
+		@param $html boolean
+		@param $coded_message boolean
+		@public
+	**/
 	function _( $from, $to, $subject, $message, $html=false, $coded_message=false )
 	{
 		$headers	= array();
@@ -58,6 +72,15 @@ final class Mailer
 		return @mail($to, $subject, $message, $headers);
 	}
 	
+	/**
+	Send mail using PHPMailer class
+		@param $sender string
+		@param $recipient string
+		@param $subject string
+		@param $message string
+		@param $attachment mixed
+		@public
+	**/
 	function PHPMailer( $sender, $recipient, $subject, $message, $attachment=null )
 	{
 		include_once( dirname(__FILE__) .DS. '3rdparty' .DS. 'class.phpmailer.php' );
@@ -83,6 +106,11 @@ final class Mailer
 		@$mail->Send(); // send message
 	}
 	
+	/**
+	Get email address from string
+		@param $value string
+		@private
+	**/
 	private function parseEmail( $value )
 	{
 		$emails	= array();

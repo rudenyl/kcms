@@ -1,7 +1,8 @@
 <?php
 /*
 * $Id: sqlite.udf.php, version 1.0
-*
+* SQLite storage helper file
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');

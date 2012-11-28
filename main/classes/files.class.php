@@ -1,8 +1,8 @@
 <?php
 /*
 * $Id: files.class.php, version 0.1.020711
-*
 * File utility base class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -44,6 +44,7 @@ final class Files
 	/**
 	Get directory files
 		@param $path string
+		@param $filter string
 		@public
 	**/
 	static public function getFolderFiles( $path='', $filter='.' )
@@ -76,9 +77,11 @@ final class Files
 		return $files;
 	}
 	
-	// Get file mime type
-	// http://stackoverflow.com/questions/1232769/how-to-get-the-content-type-of-a-file-in-php
-	// modified
+	/** Get file mime type
+		@ref: http://stackoverflow.com/questions/1232769/how-to-get-the-content-type-of-a-file-in-php (modified)
+		@param $filename string
+		@public
+	**/
 	function getFileMimeType( $filename ) 
 	{
 		if (function_exists('finfo_file')) {
@@ -89,7 +92,6 @@ final class Files
 		else {
 			//require_once 'upgradephp/ext/mime.php';
 			//$type	= mime_content_type($filename);
-			
 			return false;
 		}
 
@@ -102,14 +104,11 @@ final class Files
 		}
 
 		if (!$type || in_array($type, array('application/octet-stream', 'text/plain'))) {
-			/*
-			require_once 'upgradephp/ext/mime.php';
-			$exifImageType	= exif_imagetype($filename);
-			
-			if ($exifImageType !== false) {
-				$type	= image_type_to_mime_type($exifImageType);
-			}
-			*/
+			//require_once 'upgradephp/ext/mime.php';
+			//$exifImageType	= exif_imagetype($filename);
+			//if ($exifImageType !== false) {
+			//	$type	= image_type_to_mime_type($exifImageType);
+			//}
 			return false;
 		}
 
@@ -121,7 +120,7 @@ final class Files
 		@param $filename string
 		@param $is_link boolean
 		@param $inline boolean
-		@private
+		@public
 	**/
 	function download( $filename, $is_link=false, $inline=false )
 	{
@@ -176,6 +175,7 @@ final class Files
 	/**
 	Read file in chunks
 		@param $path string
+		@param $numbytes int
 		@private
 	**/
     private function readFileChunks( $filename, &$numbytes=0 )

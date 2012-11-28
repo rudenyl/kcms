@@ -14,7 +14,7 @@ spl_autoload_register();
 
 // load configuration file
 $configFile	= BASE_PATH .DS. 'config.php';
-if( !file_exists($configFile) ) {
+if (!file_exists($configFile)) {
 	die( 'Configuration file not found.' );
 }
 
@@ -42,9 +42,9 @@ final class Factory
 		static $app;
 		
 		// create if don't exists
-		if ( !is_object($app) ) {
+		if (!is_object($app)) {
 			// single app instance only
-			if( isset($GLOBALS['_globalapp']) ) {
+			if (isset($GLOBALS['_globalapp'])) {
 				$app	= $GLOBALS['_globalapp'];
 			}
 			else {
@@ -53,6 +53,7 @@ final class Factory
 				// config
 				$config	=& Factory::getConfig();
 				$app->set('config', $config);
+				
 				// authentication
 				$auth	=& Factory::getAuth();
 				$app->set('auth', $auth);
@@ -79,27 +80,27 @@ final class Factory
 		static $config;
 		
 		// create if don't exists
-		if ( !is_object($config) ) {
+		if (!is_object($config)) {
 			$vars	= get_class_vars('Config');
 			$config	= new stdclass();
 
 			// map to object
-			if( !empty($vars) ) {
-				foreach($vars as $k=>$v) {
+			if (!empty($vars)) {
+				foreach ($vars as $k=>$v) {
 					$config->$k	= $v;
 				}
 			}
 			
 			// validate required
-			if( !isset($config->dsn) ) {
+			if (!isset($config->dsn)) {
 				$config->dsn	= '';
 			}
 			
 			// raw
-			$config->__raw	= new Config();
+			$config->__raw		= new Config();
 			
-			// parse host scheme
-			$http_scheme	= isset($_SERVER['HTTPS']) || ($_SERVER['SERVER_PORT'] == '443') ? 'https' : 'http';
+			// parse host s	cheme
+			$http_scheme		= isset($_SERVER['HTTPS']) || ($_SERVER['SERVER_PORT'] == '443') ? 'https' : 'http';
 			$config->baseURL	= preg_replace('/<scheme\/>/i', $http_scheme, $config->baseURL);
 			$config->cacheURL	= preg_replace('/<scheme\/>/i', $http_scheme, $config->cacheURL);
 			// parse host alias
@@ -112,6 +113,7 @@ final class Factory
 
 	/**
 	Get database object
+		@param $force_reload boolean
 		@public
 	**/
 	static function &getDBO( $force_reload=false )
@@ -152,7 +154,7 @@ final class Factory
 		static $auth;
 	
 		// create if don't exists
-		if ( !is_object($auth) ) {
+		if (!is_object($auth)) {
 			$auth = new Auth();
 		}
 		
@@ -168,7 +170,7 @@ final class Factory
 		static $acl;
 	
 		// create if don't exists
-		if ( !is_object($acl) ) {
+		if (!is_object($acl)) {
 			$acl = new ACL();
 		}
 		
@@ -184,7 +186,7 @@ final class Factory
 		static $cache;
 	
 		// create if don't exists
-		if ( !is_object($cache) ) {
+		if (!is_object($cache)) {
 			// get cache type
 			$config	=& Factory::getConfig();
 			
@@ -200,6 +202,7 @@ final class Factory
 	
 	/**
 	Get Logging system
+		@param $unique_id string
 		@public
 	**/
 	static function &getLogging( $unique_id=null )
@@ -207,7 +210,7 @@ final class Factory
 		static $logging;
 	
 		// create if don't exists
-		if ( !is_object($logging) ) {
+		if (!is_object($logging)) {
 			// get logging type
 			$config	=& Factory::getConfig();
 			
@@ -221,9 +224,10 @@ final class Factory
 		return $logging;
 	}
 	
-	/* 18/May/2012
-	** Add mobile detection
-	*/
+	/**
+	Detect mobile platform
+		@public
+	**/
 	static function &getMobileDetector()
 	{
 		static $mobile_detect;
@@ -314,7 +318,7 @@ final class Request
 		$old_value	= self::_clean($old_value);
 		
 		if ( empty($request_method) ) {
-			$request_method			= $_SERVER['REQUEST_METHOD'];
+			$request_method	= $_SERVER['REQUEST_METHOD'];
 		}
 		
 		// Get the value by request method
@@ -347,17 +351,22 @@ final class Request
 		return $old_value;
 	}
 
-	static private function _clean($var)
+	/**
+	Clean request variable value
+		@param $var string
+		@public
+	**/
+	static private function _clean( $var )
 	{
 		//return is_array($var) ? array_map(array($this, '_clean'), $var) : str_replace("\\", "\\\\", htmlspecialchars((get_magic_quotes_gpc() ? stripslashes($var) : $var), ENT_QUOTES)); 
 		//return is_array($var) ? @array_map('Request::_clean', $var) : str_replace("\\", "\\\\", htmlspecialchars((get_magic_quotes_gpc() ? stripslashes($var) : $var), ENT_QUOTES)); 
 
-		if( !is_array($var) ) {
+		if (!is_array($var)) {
 			$var	= get_magic_quotes_gpc() ? stripslashes($var) : $var;
 			$var	= htmlspecialchars($var, ENT_QUOTES);
 			$var	= str_replace("\\", "\\\\", $var); 
 		}
-			
+		
 		return $var;
 	}
 }

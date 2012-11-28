@@ -1,8 +1,8 @@
 <?php
 /*
-* $Id: $dhens, storage.class.php, version 1.0
-*
-* Application core class
+* $Id: storage.class.php, version 1.0
+* Storage base class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -22,8 +22,9 @@ class storage
 	}
 	
 	/**
-	* Load storage preference
+	Load storage preference
 		@param $type string
+		@public
 	**/
 	function load( $dsn='', $type=null )
 	{
@@ -63,8 +64,9 @@ class storage
 	}
 	
 	/**
-	* Set timezone setting
+	Set timezone setting
 		@param $tz string
+		@public
 	**/
 	public function set_timezone( $tz )
 	{
@@ -127,9 +129,21 @@ class storage
 	public function last_insert_id() {}
 	/**
 	Get table columns
+		@param $table_name string
 		@public
 	**/
 	public function get_table_columns( $table_name ) {}
+	/**
+	Get last query statement
+		@public
+	**/
+	public function last_query() {}
+	/**
+	Check if table exists
+		@param $table_name string
+		@public
+	**/
+	public function table_exists( $table_name ) {}
 	/**
 	Get last query error
 		@public
@@ -148,6 +162,7 @@ class storage
 	public function getEscaped( $text ) {}
 	/**
 	Get current database date
+		@param $unix_ts boolean
 		@public
 	**/
 	public function curdate( $unix_ts=false ) {}
@@ -166,7 +181,7 @@ class storage
 	/**
 	* Quote an identifier name
 		@param $name string
-		@param $escaped boolean
+		@param $quote_text string
 		@public
 	*/
 	function nameQuote( $name, $quote_text='`' )
@@ -187,6 +202,10 @@ class storage
 
 	/**
 	Add row into table
+		@param $table_name string
+		@param $row object
+		@param $key_field string
+		@param $convert_array_to_string boolean
 		@public
 	**/
 	function add_row( $table_name, &$row, $key_field=null, $convert_array_to_string=false ) 
@@ -230,6 +249,10 @@ class storage
 	
 	/**
 	Update a row
+		@param $table_name string
+		@param $row object
+		@param $key_field string
+		@param $convert_array_to_string boolean
 		@public
 	**/
 	function update_row( $table_name, &$row, $key_field, $convert_array_to_string=false ) 
@@ -274,6 +297,8 @@ class storage
 	
 	/**
 	Bind array to a row object
+		@param $array array
+		@param $row object
 		@public
 	**/
 	function bindArrayToRow( $array, &$row ) 
@@ -294,6 +319,7 @@ class storage
 	
 	/**
 	array to a row object
+		@param $array array
 		@public
 	**/
 	function toObject( $array )

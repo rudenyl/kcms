@@ -1,8 +1,8 @@
 <?php
 /*
 * $Id: view.class.php, version 0.1.172011
-*
 * View base class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -24,14 +24,14 @@ class View
 	function __construct( $appName='' )
 	{
 		// get view name
-		if ( preg_match( '/View(.*)/i', get_class($this), $match) ) {
+		if (preg_match( '/View(.*)/i', get_class($this), $match)) {
 			$this->_name 	= strtolower($match[1]);
 		}
 		
 		// get application name
 		$this->_appName		= $appName;
 		
-		if( empty($this->_appName) ) {
+		if (empty($this->_appName)) {
 			$this->_appName		= Request::getVar('app', 'default');
 		}
 	}
@@ -44,7 +44,7 @@ class View
 	**/
 	public function set( $key, $value=null )
 	{
-		$sig	= md5( $this->_name.$this->_appName );
+		$sig	= md5($this->_name.$this->_appName);
 		self::$_data[$sig][$key]	= $value;
 	}
 	
@@ -59,12 +59,12 @@ class View
 		$value	= null;
 
 		$sig	= md5( $this->_name.$this->_appName );
-		if( isset(self::$_data[$sig][$key]) ) {
+		if (isset(self::$_data[$sig][$key])) {
 			$value	= self::$_data[$sig][$key];
 		}
 		
 		// set default value
-		if( empty($value) && $default_value ) {
+		if (empty($value) && $default_value) {
 			$value	= $default_value;
 		}
 		
@@ -97,7 +97,7 @@ class View
 	**/
 	public function display( $layout='' )
 	{
-		if( empty($layout) ) {
+		if (empty($layout)) {
 			$layout	= $this->_template;
 		}
 		
@@ -117,17 +117,18 @@ class View
 	
 	/**
 	Get view model
+		@param $name string
 		@public
 	**/
 	public function &getModel( $name='' )
 	{
 		$model	= null;
 	
-		if( !empty($name) ) {
+		if (!empty($name)) {
 			$modelPath	= PATH_APPLICATIONS .DS. $this->_appName .DS. 'models' .DS. $name.'.php';
 			
 			// load model
-			if( file_exists($modelPath) && is_file($modelPath) ) {
+			if (file_exists($modelPath) && is_file($modelPath)) {
 				require_once( $modelPath );
 				
 				$this_class_name	= get_class($this);
@@ -135,7 +136,7 @@ class View
 				$modelClassName	= ucfirst($this->_appName) .'Model'. ucfirst($name);
 				$model			= new $modelClassName();
 				
-				if( is_subclass_of($model, 'Model')  ) {
+				if (is_subclass_of($model, 'Model')) {
 					return $model;
 				}
 				else {
@@ -144,7 +145,7 @@ class View
 			}
 		}
 	
-		if( isset($this->_model) ) {
+		if (isset($this->_model)) {
 			$model	= $this->_model;
 		}
 		
@@ -153,6 +154,7 @@ class View
 	
 	/**
 	Set plugins
+		@param $plugins object
 		@public
 	**/
 	public function setPlugins( $plugins )
@@ -187,11 +189,11 @@ class View
 	{
 		$html	= '';
 		
-		if( is_subclass_of($this, 'View') ) {
+		if (is_subclass_of($this, 'View')) {
 			$tpl_path	= PATH_APPLICATIONS .DS. $this->_appName .DS. 'views' .DS. $this->_name .DS. 'tmpl' .DS. $layout.'.php';
 
 			// load layout
-			if( file_exists($tpl_path) && is_file($tpl_path) ) {
+			if (file_exists($tpl_path) && is_file($tpl_path)) {
 				ob_start();
 				
 				include( $tpl_path );

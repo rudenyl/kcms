@@ -1,8 +1,8 @@
 <?php
 /*
-* $Id: thirdpartyhelper.class.php Dhens
-*
+* $Id: thirdpartyhelper.class.php
 * 3rd party library class helper
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -10,8 +10,10 @@ defined('_PRIVATE') or die('Direct access not allowed');
 final class ThirdPartyHelper
 {
 	/**
-	 * Helper loader method
-	 */
+	Helper loader method
+		@param $type string
+		@public
+	**/
 	static function _( $type )
 	{
 		$prefix 	= 'ThirdPartyClass';

@@ -1,8 +1,8 @@
 <?php
 /*
 * $Id: app_init.class.php
-*
 * Component initialization handler
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -12,6 +12,11 @@ class AppInitHandler
 	protected $_name		= '';
 	protected $_appName		= '';
 	
+	/**
+	Class constructor
+		@param $appName string
+		@public
+	**/
 	function __construct( $appName='' )
 	{
 		// get handler name
@@ -34,6 +39,7 @@ class AppInitHandler
 	
 	/**
 	Get controller model
+		@param $name string
 		@return object
 		@public
 	**/

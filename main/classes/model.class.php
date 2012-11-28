@@ -1,8 +1,8 @@
 <?php
 /*
 * $Id: model.class.php, version 0.1.172011
-*
 * Model base class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -17,8 +17,11 @@ class Model
 	protected $__tbl_name	= '';
 	protected $__tbl_alias	= '';
 	protected $___vars		= null;
-	protected $___query		= '';
 
+	/**
+	Class constructor
+		@public
+	**/
 	function __construct()
 	{
 		$this->_db	=& Factory::getDBO();
@@ -31,16 +34,11 @@ class Model
 		}
 	}
 	
-	private function __initTable( $table_key, $table_name )
-	{
-		$this->__tbl_key	= $table_key;
-		$this->__tbl_name	= $table_name;
-		$this->__tbl_alias	= $this->_createTableAlias($table_name);
-		
-		// init table vars
-		$this->_initVars();
-	}
-	
+	/**
+	Get total rows
+		@param $sql string
+		@public
+	**/
 	public function getTotal( $sql='' )
 	{
 		$where		= $this->getListWhere();
@@ -58,6 +56,12 @@ class Model
 		return (int)$this->_db->result();
 	}
 	
+	/**
+	Get query results in array of objects
+		@param $sql string
+		@return object array
+		@public
+	**/
 	public function &getList( $sql='' )
 	{
 		$where		= $this->getListWhere();
@@ -73,15 +77,19 @@ class Model
 		
 		$this->_parseSQL($sql);
 		
-		// set last query
-		$this->___query	= $sql;
-
 		$this->_db->query($sql, $this->limitstart, $this->limit);
 		$rows = $this->_db->fetch_object_list();
 		
 		return $rows;
 	}
 	
+	/**
+	Get a single row
+		@param $id int
+		@param $sql string
+		@return object
+		@public
+	**/
 	public function &getRow( $id, $sql=null )
 	{
 		$id		= intval($id);
@@ -95,9 +103,6 @@ class Model
 		$this->_parseSQL($sql);
 		$this->_db->query($sql);
 		
-		// set last query
-		$this->___query	= $sql;
-
 		$rows = $this->_db->fetch_object_list();
 		if( $rows ) {
 			return $rows[0];
@@ -112,6 +117,7 @@ class Model
 	
 	/**
 	Get related model relative to path
+		@param $name string
 		@return object
 		@public
 	**/
@@ -144,7 +150,11 @@ class Model
 		return $model;
 	}
 	
-	/* ordering */
+	/**
+	Reorder list
+		@param $where string
+		@public
+	**/
 	function reorder( $where='' )
 	{
 		// get ordering tag
@@ -175,9 +185,6 @@ class Model
 		;
 		$this->_db->query($sql);
 		
-		// set last query
-		$this->___query	= $sql;
-
 		$orders	= $this->_db->fetch_object_list();
 		
 		if( $orders ) {
@@ -207,10 +214,42 @@ class Model
 		return false;
 	}
 
+	/**
+	Get WHERE statement piece
+		@public
+	**/
+	public function getListWhere() 
+	{
+		return '';
+	}
 	
 	/**
-	* CRUD functions
-	*/
+	Get ORDER BY statement piece
+		@public
+	**/
+	public function getOrderBy() 
+	{
+		return '';
+	}
+	
+	/**
+	Bind values to table columns
+		@param $vars mixed
+		@public
+	**/
+	public function bind( $vars )
+	{
+		// convert to array if type object
+		$vars	= $this->toArray($vars);
+	
+		return $this->_db->bindArrayToRow($vars, $this->___vars);
+	}
+	
+	/**
+	Delete row
+		@param $id int
+		@public
+	**/
 	public function delete( $id )
 	{
 		$id		= intval($id);
@@ -221,34 +260,14 @@ class Model
 		;
 		$this->_db->query($sql);
 		
-		// set last query
-		$this->___query	= $sql;
-
 		return ($this->_db->affected_rows() > 0);
 	}
 	
-	public function getListWhere() 
-	{
-		return '';
-	}
-	public function getOrderBy() 
-	{
-		return '';
-	}
-	
-	public function getObjectVars()
-	{
-		return $this->___vars;
-	}
-	
-	public function bind( $vars )
-	{
-		// convert to array if type object
-		$vars	= $this->toArray($vars);
-	
-		return $this->_db->bindArrayToRow($vars, $this->___vars);
-	}
-	
+	/**
+	Save row to table
+		@param $row object
+		@public
+	**/
 	public function store( $row=null ) 
 	{
 		// get vars
@@ -271,12 +290,60 @@ class Model
 		);
 	}
 	
-	// TODO: do intensive sql prepare
-	public function prepare( &$sql )
+	/**
+	Assign sql statement variables values
+		@public
+	**/
+	public function prepare()
 	{
-		$this->_parseSQL($sql);
+		if ($n_args = func_num_args()) {
+			$args	= func_get_args();
+			
+			$sql	= $args[0];
+			array_shift($args);
+			
+			// get fields
+			preg_match_all('/:(\w)+/', $sql, $matches);
+			
+			if (count(@$matches[0]) < count($args)) {
+				return false;
+			}
+			
+			// parse
+			foreach ($matches[0] as $i=>$match) {
+				$value	= $this->_db->Quote($args[$i]);
+				$sql	= str_replace($match, $value, $sql);
+			}
+			
+			return $sql;
+		}
+		
+		return '';
 	}
 	
+	/**
+	Get object vars
+		@public
+	**/
+	public function getObjectVars()
+	{
+		return $this->___vars;
+	}
+	
+	/**
+	Get last sql query error
+		@public
+	**/
+	public function getLastError()
+	{
+		return $this->_db->error();
+	}
+	
+	/**
+	Convert object to array
+		@param $data object
+		@public
+	**/
 	public function toArray( $data )
 	{
 		$array	= array();
@@ -292,17 +359,10 @@ class Model
 		return $array;
 	}
 	
-	public function getLastError()
-	{
-		return $this->_db->error();
-	}
-	
-	public function getLastQuery()
-	{
-		// last query
-		return $this->___query;
-	}
-	
+	/**
+	Init table column references
+		@protected
+	**/
 	protected function _initVars()
 	{
 		// initialize
@@ -317,6 +377,27 @@ class Model
 		}
 	}
 	
+	/**
+	Initialize class references
+		@param $table_key string
+		@param $table_name string
+		@private
+	**/
+	private function __initTable( $table_key, $table_name )
+	{
+		$this->__tbl_key	= $table_key;
+		$this->__tbl_name	= $table_name;
+		$this->__tbl_alias	= $this->_createTableAlias($table_name);
+		
+		// init table vars
+		$this->_initVars();
+	}
+	
+	/**
+	Create table alias
+		@param $alias string
+		@private
+	**/
 	private function _createTableAlias($alias)
 	{
 		$alias	= preg_replace('/[^a-zA-Z0-9]/', '', $alias);
@@ -325,6 +406,11 @@ class Model
 		return $alias;
 	}
 	
+	/**
+	Parse sql statement tags
+		@param $sql string
+		@private
+	**/
 	private function _parseSQL( &$sql )
 	{
 		$sql	= preg_replace('/<table\/>/', $this->__tbl_name, $sql);

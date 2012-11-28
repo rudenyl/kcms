@@ -1,8 +1,8 @@
 <?php
 /*
 * $Id: image.class.php, version 0.1.1212011
-*
-* Application core class
+* Image manipulation helper class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -24,6 +24,7 @@ final class Image
 		@param $imgHeight integer
 		@param $dest string
 		@param $prefix string
+		@param $crop boolean
 		@public
 	**/
 	public function thumb( $file, $imgWidth, $imgHeight, $dest='', $prefix='', $crop=true) 
@@ -41,15 +42,13 @@ final class Image
 		$fileExt	= str_replace('jpg', 'jpeg', $ext[1]);
 		
 		if( $fileExt == 'bmp') {
-			/*
-			if (!function_exists('imagecreatefrombmp')) { 
-				$funcPrefix	= 'self::image';
-				$img		= self::imagecreatefrombmp( $file );
-			}
-			else {
-				$img		= imagecreatefrombmp( $file );
-			}
-			*/
+			//if (!function_exists('imagecreatefrombmp')) { 
+			//	$funcPrefix	= 'self::image';
+			//	$img		= self::imagecreatefrombmp( $file );
+			//}
+			//else {
+			//	$img		= imagecreatefrombmp( $file );
+			//}
 			
 			// disable for now
 			return null;
@@ -312,11 +311,14 @@ final class Image
 		return $im;
 	}
 	
-	/*///////////////////////////////////////////////*/ 
-	/*// BMP creation group //*/ 
-	/*///////////////////////////////////////////////*/ 
-	/* ImageBMP */ 
-	// http://alufis35.uv.es/websvn/filedetails.php?repname=spip&path=/mollio/branches/1.9/plugins/article_pdf/pdf/GifSplit.class.php&sc=1
+	/**
+	BMP creation group (as described)
+		@ref: http://alufis35.uv.es/websvn/filedetails.php?repname=spip&path=/mollio/branches/1.9/plugins/article_pdf/pdf/GifSplit.class.php&sc=1
+		@param $img object
+		@param $file string 
+		@param $RLE int
+		@public
+	**/
 	function imagebmp($img, $file, $RLE=0) 
 	{ 
 		$ColorCount = imagecolorstotal($img); 
@@ -355,21 +357,21 @@ final class Image
 		$offset = 54 + $palsize; 
 		// Bitmap File Header 
 		$ret = 'BM'; 
-		$ret .= self::int_to_dword($size); 
-		$ret .= self::int_to_dword(0); 
-		$ret .= self::int_to_dword($offset); 
+		$ret .= self::_int_to_dword($size); 
+		$ret .= self::_int_to_dword(0); 
+		$ret .= self::_int_to_dword($offset); 
 		// Bitmap Info Header 
-		$ret .= self::int_to_dword(40); 
-		$ret .= self::int_to_dword($Width); 
-		$ret .= self::int_to_dword($Height); 
-		$ret .= self::int_to_word(1); 
-		$ret .= self::int_to_word($BitCount); 
-		$ret .= self::int_to_dword($RLE); 
-		$ret .= self::int_to_dword(0); 
-		$ret .= self::int_to_dword(0); 
-		$ret .= self::int_to_dword(0); 
-		$ret .= self::int_to_dword(0); 
-		$ret .= self::int_to_dword(0); 
+		$ret .= self::_int_to_dword(40); 
+		$ret .= self::_int_to_dword($Width); 
+		$ret .= self::_int_to_dword($Height); 
+		$ret .= self::_int_to_word(1); 
+		$ret .= self::_int_to_word($BitCount); 
+		$ret .= self::_int_to_dword($RLE); 
+		$ret .= self::_int_to_dword(0); 
+		$ret .= self::_int_to_dword(0); 
+		$ret .= self::_int_to_dword(0); 
+		$ret .= self::_int_to_dword(0); 
+		$ret .= self::_int_to_dword(0); 
 		// image data 
 		$CC = $ColorCount; 
 		$sl1 = strlen($ret); 
@@ -381,17 +383,17 @@ final class Image
 			
 			for($p = 0; $p < $ColorTotal; $p++) { 
 				$color = imagecolorsforindex($img, $p); 
-				$ret .= self::inttobyte($color["blue"]); 
-				$ret .= self::inttobyte($color["green"]); 
-				$ret .= self::inttobyte($color["red"]); 
-				$ret .= self::inttobyte(0); 
+				$ret .= self::_int_to_byte($color["blue"]); 
+				$ret .= self::_int_to_byte($color["green"]); 
+				$ret .= self::_int_to_byte($color["red"]); 
+				$ret .= self::_int_to_byte(0); 
 			} 
 			$CT = $ColorTotal; 
 			for($p = $ColorTotal; $p < $CC; $p++) { 
-				$ret .= self::inttobyte(0); 
-				$ret .= self::inttobyte(0); 
-				$ret .= self::inttobyte(0); 
-				$ret .= self::inttobyte(0); 
+				$ret .= self::_int_to_byte(0); 
+				$ret .= self::_int_to_byte(0); 
+				$ret .= self::_int_to_byte(0); 
+				$ret .= self::_int_to_byte(0); 
 			} 
 		} 
 		if($BitCount <= 8) { 
@@ -399,10 +401,10 @@ final class Image
 				$bWrite = ""; 
 				for($x = 0; $x < $Width; $x++) { 
 					$color = imagecolorat($img, $x, $y); 
-					$bWrite .= self::decbinx($color, $BitCount); 
+					$bWrite .= self::_dec_to_bin$color, $BitCount); 
 					
 				if(strlen($bWrite) == 8) { 
-					$retd .= self::inttobyte(bindec($bWrite)); 
+					$retd .= self::_int_to_byte(bindec($bWrite)); 
 					$bWrite = ""; 
 				} 
 			} 
@@ -411,10 +413,10 @@ final class Image
 				$sl = strlen($bWrite); 
 				
 				for($t = 0; $t < 8 - $sl; $t++) $sl .= "0"; 
-				$retd .= self::inttobyte(bindec($bWrite)); 
+				$retd .= self::_int_to_byte(bindec($bWrite)); 
 			} 
 			
-			for($z = 0; $z < $Zbytek; $z++) $retd .= self::inttobyte(0); 
+			for($z = 0; $z < $Zbytek; $z++) $retd .= self::_int_to_byte(0); 
 			} 
 		}
 		
@@ -455,25 +457,53 @@ final class Image
 		else 
 			return false; 
 	} 
-	function int_to_word($n)
+	
+	/**
+	Helper functions
+	**/
+	/**
+	Convert int to word
+		@param $n int
+		@private
+	**/
+	function _int_to_word( $n )
 	{
 		return chr($n & 255).chr(($n >> 8) & 255);
 	}
-	function int_to_dword($n)
+	
+	/**
+	Convert int to dword
+		@param $n int
+		@private
+	**/
+	function _int_to_dword( $n )
 	{
 		return chr($n & 255).chr(($n >> 8) & 255).chr(($n >> 16) & 255).chr(($n >> 24) & 255); 
 	}
-	function inttobyte($n)
+	
+	/**
+	Convert int to byte
+		@param $n int
+		@private
+	**/
+	function _int_to_byte( $n )
 	{
 		return chr($n);
 	}
-	function decbinx($d,$n)
+	
+	/**
+	Convert decimal to binary (custom)
+		@param $n int
+		@private
+	**/
+	function _dec_to_bin $d, $n )
 	{
-		$bin = decbin($d);
-		$sbin = strlen($bin);
-		for($j = 0; $j < $n - $sbin; $j++) $bin = "0$bin";
+		$bin	= decbin($d);
+		$sbin	= strlen($bin);
+		for($j = 0; $j < $n - $sbin; $j++) {
+			$bin	= "0$bin";
+		}
 		
 		return $bin;
 	}
-	
 }

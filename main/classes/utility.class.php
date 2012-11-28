@@ -1,14 +1,19 @@
 <?php
 /*
 * $Id: utility.class.php
+* Helper class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
 
 final class Utility
 {
-	/*
+	/**
 	Generate Base36/CRC32 hash code
+		@param $str string
+		@param $hash_type string
+		@public
 	*/
 	public static function getHash( $str, $hash_type='crc32' ) 
 	{
@@ -19,6 +24,11 @@ final class Utility
 		return $hash;
 	}
 	
+	/**
+	Create a token
+		@param $length int
+		@public
+	**/
 	function createToken( $length=5 )
 	{
 		static $chars	=	'0123456789abcdef';
@@ -32,6 +42,12 @@ final class Utility
 		return md5($token.$name);
 	}
 	
+	/**
+	Get $_REQUEST variables
+		@param $key string
+		@param $value string
+		@public
+	**/
 	function getRequestParam($key, $value='')
 	{
 		$args	= explode('.', $key);
@@ -59,6 +75,12 @@ final class Utility
 		return null;
 	}
 	
+	/**
+	Clear $_REQUEST values
+		@param $request string
+		@param $strict boolean
+		@public
+	**/
 	function clearRequestParams( $request, $strict=true )
 	{
 		$requests	= explode('|', $request);
@@ -103,7 +125,13 @@ final class Utility
 		return true;
 	}
 	
-	// get params
+	/**
+	Get a specific request method variables
+		@param $type string
+		@param $parameterized boolean
+		@param $exclude array
+		@public
+	**/
 	function getParams( $type=null, $parameterized=true, $exclude=array() )
 	{
 		$types	= array();
@@ -176,8 +204,10 @@ final class Utility
 	}
 	
 	/**
-	* Parse URI scheme from params
-	*/
+	Parse URI scheme from params
+		@param $data string
+		@public
+	**/
 	static function parseURISchemeData( $data )
 	{
 		if (empty($data)) {
@@ -222,8 +252,10 @@ final class Utility
 	}
 	
 	/**
-	* Get client IP address
-	*/
+	Get client IP address
+		@param $exclude_proxy boolean
+		@public
+	**/
 	static function getClientIP( $exclude_proxy=false )
 	{
 		$proxy	= '';
@@ -257,13 +289,12 @@ final class Utility
 	}
 	
 	/** 
-	 * Set text limit
-	 *
-	 * @param $text string
-	 * @param $limit integer
-	 * @param $allowed_tags string
-	 * @return string
-	 */
+	Set text limit
+		@param $text string
+		@param $limit int
+		@param $allowd_tags string
+		@public
+	**/
 	static function LimitText( $text, $limit, $allowed_tags='' ) 
 	{
 		$strip		= strip_tags($text);
@@ -300,8 +331,14 @@ final class Utility
 		return $display.$endText;
 	}
 	
-    // Word limit
-	// K2: utilities.php
+	/**
+	Set word limit
+		@ref: K2 component > utilities.php
+		@param $str string
+		@param $limit int
+		@param $end_char char
+		@public
+	**/
     function wordLimit( $str, $limit=100, $end_char='&#8230;') 
 	{
 		if ( trim($str) == '' ) {
@@ -320,12 +357,14 @@ final class Utility
     }
     
     /**
-	 * Clean and prepare text, remove any unwanted tags etc
-	 *
-	 * @param $text string
-	 * @return string
-	 */
-	static function CleanText( $text, $tidy_up=false, $convert_special_chars=true ) {
+	Clean and prepare text, remove any unwanted tags etc
+		@param $text string
+		@param $tidy_up boolean
+		@param $convert_special_chars boolean
+		@public
+	**/
+	static function CleanText( $text, $tidy_up=false, $convert_special_chars=true ) 
+	{
 		// remove any javascript - OLLY
 		// http://forum.joomla.org/index.php?topic=194800.msg1036857
 		$regex	= "'<script[^>]*?>.*?</script>'si";
@@ -372,8 +411,11 @@ final class Utility
 	}
 	
 	/**
-	* Simple XSS terminator
-	*/
+	Simple XSS fix
+		@param $var string
+		@param $convert_to_html boolean
+		@public
+	**/
 	function cleanVar( $var, $convert_to_html=true )
 	{
 		// init db
@@ -397,9 +439,11 @@ final class Utility
 	}
 	
 	/**
-	* Password generator
-	* // http://wiki.jumba.com.au/wiki/PHP_Generate_random_password
-	*/
+	Password generator
+		@ref: http://wiki.jumba.com.au/wiki/PHP_Generate_random_password
+		@param $length int
+		@public
+	**/
 	function generatePassword( $length ) 
 	{
 		$chars		= "234567890abcdefghijkmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -416,13 +460,15 @@ final class Utility
 	}
 	
 	/**
-	* convert object to array
-	*/
+	Convert object to array
+		@param $data array
+		@public
+	**/
 	function toArray( $data )
 	{
 		$array	= array();
 		
-		if( is_object($data) ) {
+		if (is_object($data)) {
 			foreach( get_object_vars($data) as $k=>$v ) {
 				$array[$k]	= $v;
 			}
@@ -432,8 +478,13 @@ final class Utility
 	}
 	
 	/**
-	* string to url format
-	*/
+	String to url format
+		@param $text string
+		@param $create_link boolean
+		@param $target string
+		@param $link_title string
+		@public
+	**/
 	function toURL( $text, $create_link=true, $target='_blank', $link_title='Follow link' )
 	{
 		if (!empty($text)) {
@@ -472,7 +523,12 @@ final class Utility
 		}
 	}
 	
-	// create unique name
+	/**
+	Create a unique name
+		@param $text string
+		@param $retain_orientation boolean
+		@public
+	**/
 	public function unique_name( $text, $retain_orientation=false )
 	{
 		//mb_internal_encoding("utf-8");
@@ -497,7 +553,11 @@ final class Utility
 		return $text;
 	}
 	
-	// check if system function is disabled/enabled
+	/**
+	Check if system function is disabled/enabled
+		@param $method string
+		@public
+	**/
 	function is_func_disabled( $method ) 
 	{
 		$items		= array();
@@ -510,6 +570,12 @@ final class Utility
 		return in_array($method, $items);
 	}
 
+	/**
+	Parses file to key-value pairing ("parse_ini_file" function alias)
+		@param $filename string
+		@param $process_sections boolean
+		@public
+	**/
 	function parse_ini_file( $filename, $process_sections=false ) 
 	{
 		if (Utility::is_func_disabled('parse_ini_file')) {
@@ -571,8 +637,12 @@ final class Utility
 		}
 	}
 	
-	/** Simple obfuscation functions
-	*/
+	/** 
+	Simple obfuscation function (encryption)
+		@param $id int
+		@param $salt string
+		@public
+	**/
 	function encrypt( $id, $salt=null )
 	{
 		if ($salt) {
@@ -595,6 +665,11 @@ final class Utility
 		return $key;
 	}
 	
+	/** 
+	Simple obfuscation function (decrypt)
+		@param $key string
+		@public
+	**/
 	function decrypt( $key )
 	{
 		$key	= substr($key, 0, strlen($key) - 3);
@@ -606,7 +681,12 @@ final class Utility
 		return $key;
 	}
 	
-	// random text
+	/**
+	Create a random text
+		@param $length int
+		@param $is_alphanum boolean
+		@public
+	**/
 	static function randomText( $length=5, $is_alphanum=false )
 	{
 		// create random name
@@ -623,8 +703,13 @@ final class Utility
 	}
 	
 	/**
-	* Math functions
-	*/
+	Rounds a float ("round" allias)
+		@param $num int
+		@param $precision int
+		@param $mode int
+		@param $decimal_separator char
+		@public
+	**/
 	static function round( $num, $precision=0, $mode=1, $decimal_separator='.' )
 	{
 		// custom round function modes

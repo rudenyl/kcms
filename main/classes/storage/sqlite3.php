@@ -1,7 +1,8 @@
 <?php
 /*
 * $Id: sqlite3.php, version 1.0
-*
+* SQLite3-based storage class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -26,7 +27,7 @@ class sqlite3_storage extends storage
 	
 	/**
 	Open SQLite resource
-		@param $url string
+		@param $dsn string
 		@public
 	**/
 	function connect( $dsn ) 
@@ -253,6 +254,7 @@ class sqlite3_storage extends storage
 
 	/**
 	Get current database date
+		@param $unix_ts boolean
 		@public
 	**/
 	function curdate( $unix_ts=false ) 

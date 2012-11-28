@@ -1,8 +1,8 @@
 <?php
 /*
 * $Id: pagination.class.php, version 0.1.172011
-*
 * Page navigation base class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -22,6 +22,10 @@ final class Pagination
 	
 	protected $__component_format	= '';
 	
+	/**
+	Class constructor
+		@public
+	**/
 	function __construct( $page, $num_results, $total_items, $limit=0, $baseURL=null, $automakeSEF=false, $detect_formatting=true )
 	{
 		// bind
@@ -66,13 +70,19 @@ final class Pagination
 		}
 	}
 	
-	function getTotalPages( $total=0, $limit=0 )
+	/**
+	Get total pagination pages
+		@param $total int
+		@param $limit int
+		@public
+	**/
+	function getNumPages( $total, $limit )
 	{
-		if( $total && $limit ) {
+		if ($total && $limit) {
 			return ($total > $limit) ? ceil($total / $limit) : 0;
 		}
 		else {
-			if( isset($this) ) {
+			if (isset($this)) {
 				return $this->_num_pages;
 			}
 			else {
@@ -81,11 +91,19 @@ final class Pagination
 		}
 	}
 	
-	function getNumPages( $total, $limit )
+	/**
+	Determine if pagination is empty
+		@public
+	**/
+	function isEmpty()
 	{
-		return ($total > $limit) ? ceil($total / $limit) : 0;
+		return ($this->_total < 1);
 	}
 	
+	/**
+	Display pagination
+		@public
+	**/
 	function showPages()
 	{
 		$is_SEFlike		= (strpos($this->_baseURL, '?') === false);
@@ -145,11 +163,11 @@ final class Pagination
 		}
 	}
 	
-	function isEmpty()
-	{
-		return ($this->_total < 1);
-	}
-	
+	/**
+	Display pagination counter
+		@param $display_range boolean
+		@public
+	**/
 	function showCounter( $display_range=false )
 	{
 		if( $this->_single_page ) {

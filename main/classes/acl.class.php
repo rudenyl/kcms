@@ -1,8 +1,8 @@
 <?php
 /*
 * $Id: acl.class.php
-*
 * ACL base class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -23,6 +23,11 @@ final class ACL
 		$this->_build();
 	}
 	
+	/**
+	Check if currently-logged user has permission
+		@param $task string
+		@public
+	**/
 	function hasPermission( $task )
 	{
 		// get logged in user
@@ -44,6 +49,10 @@ final class ACL
 		return false;
 	}
 	
+	/**
+	Create permission references
+		@private
+	**/
 	private function _build()
 	{
 		$this->_perms	= array(
@@ -52,6 +61,12 @@ final class ACL
 		);
 	}
 	
+	/**
+	Get role permission for the associated app and/or key
+		@param $app string
+		@param $key string
+		@private
+	**/
 	private function _getRolePermissions( $app='', $key='' )
 	{
 		$sql	= "SELECT rp.value,CONCAT(p.app,'.',p.key) as appkey,r.level,p.alias as role_alias"
@@ -106,6 +121,12 @@ final class ACL
 		return $rows;
 	}
 	
+	/**
+	Get user permission for the associated app and/or key
+		@param $app string
+		@param $key string
+		@private
+	**/
 	private function _getUserPermissions( $app='', $key='' )
 	{
 		$sql	= "SELECT up.user_id,up.value,CONCAT(p.app,'.',p.key) as appkey,p.alias as role_alias"
@@ -158,4 +179,4 @@ final class ACL
 		
 		return $rows;
 	}
-}
+} // ACL class

@@ -1,8 +1,8 @@
 <?php
 /*
 * $Id: controller.class.php, version 0.1.172011
-*
 * Controller base class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -101,6 +101,7 @@ class Controller
 	
 	/**
 	Get controller model
+		@param $name string
 		@return object
 		@public
 	**/
@@ -170,7 +171,7 @@ class Controller
 	
 	/**
 	Set controller view
-		@return object
+		@param $name string
 		@public
 	**/
 	public function setView( $name )
@@ -180,6 +181,7 @@ class Controller
 	
 	/**
 	Render display view
+		@param $layout string
 		@public
 	**/
 	public function display( $layout=null )
@@ -200,6 +202,7 @@ class Controller
 			$view->display();
 		}
 	}
+	
 	/**
 	Load plugins
 		@private

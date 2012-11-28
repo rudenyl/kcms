@@ -1,6 +1,8 @@
 <?php
 /*
 * $Id: parameter.class.php
+* Key-value pairing manipulation class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -37,9 +39,15 @@ final class Parameter
 		}
 		
 		// format string
-		$this->getFormatted();
+		$this->_getFormatted();
 	}
 	
+	/**
+	Get key value
+		@param $key string
+		@param $default mixed
+		@public
+	**/
 	public function get( $key, $default=null )
 	{
 		if (isset($this->_object->$key)) {
@@ -50,7 +58,12 @@ final class Parameter
 		}
 	}
 	
-	// 2012/09/20
+	/**
+	Set key value
+		@param $key string
+		@param $value mixed
+		@public
+	**/
 	public function set( $key, $value=null )
 	{
 		// set object
@@ -62,7 +75,10 @@ final class Parameter
 		$this->_modified		= true;
 	}
 	
-	// 2012/09/20
+	/**
+	Convert key-pair array to string
+		@public
+	**/
 	public function toString()
 	{
 		$data	= '';
@@ -84,7 +100,11 @@ final class Parameter
 		return $data;
 	}
 	
-	private function getFormatted()
+	/**
+	Format string to key-pair value
+		@private
+	**/
+	private function _getFormatted()
 	{
 		if (empty($this->_raw)) {
 			return array();

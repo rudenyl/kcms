@@ -494,7 +494,7 @@ final class Application
 		
 		/* process routing */
 		// tidy paths
-		self::$global['RESPONSE']	= URL::build($config->baseURL, self::$global['RESPONSE']);
+		self::$global['RESPONSE']	= URL::tidy_path($config->baseURL, self::$global['RESPONSE']);
 		// SEF
 		if($config->SEFURL) {
 			self::$global['RESPONSE']	= URL::buildSEFRoute($config->baseURL, self::$global['RESPONSE']);

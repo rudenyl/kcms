@@ -1,8 +1,8 @@
 <?php
 /*
 * $Id: auth.class.php, version 0.1.05112011
-*
 * User authentication base class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -35,7 +35,7 @@ final class Auth
 		$this->_loggedIn	= false;
 
 		if (!is_null($user_to_impersonate)) {
-			return $this->impersonate($user_to_impersonate);
+			return $this->_impersonate($user_to_impersonate);
 		}
 
 		if ($this->attemptSessionLogin()) {
@@ -43,13 +43,23 @@ final class Auth
 		}
 	}
 	
+	/**
+	Login function
+		@param $username string
+		@param $password string
+		@public
+	**/
 	public function login( $username, $password )
 	{
-		$password	= $this->createHashedPassword($password);
+		$password	= $this->_createHashedPassword($password);
 		
-		return $this->attemptLogin(md5($username), $password);
+		return $this->_attemptLogin(md5($username), $password);
 	}
 
+	/**
+	Logout function
+		@public
+	**/
 	public function logout()
 	{
 		@session_start();
@@ -75,7 +85,11 @@ final class Auth
 		@session_destroy();
 	}
 
-	// Assumes you have already checked for duplicate usernames
+	/**
+	Re-instate user after username changes
+		@param $new_username string
+		@public
+	**/
 	public function changeUsername( $new_username )
 	{
 		$db		=& Factory::getDBO();
@@ -88,7 +102,7 @@ final class Auth
 		$db->query($sql);
 
 		if($db->affected_rows() == 1) {
-			$this->impersonate($this->id);
+			$this->_impersonate($this->id);
 			
 			return true;
 		}
@@ -96,11 +110,16 @@ final class Auth
 		return false;
 	}
 
+	/**
+	Re-instate user after password changes
+		@param $new_password string
+		@public
+	**/
 	public function changePassword( $new_password )
 	{
 		$db		=& Factory::getDBO();
 		
-		$new_password	= $this->createHashedPassword($new_password);
+		$new_password	= $this->_createHashedPassword($new_password);
 		
 		$sql	= "UPDATE {TABLE_PREFIX}_users"
 		."\n SET `password` = " . $db->Quote($new_password)
@@ -110,7 +129,7 @@ final class Auth
 		$db->query($sql);
 
 		if($db->affected_rows() == 1) {
-			$this->impersonate($this->id);
+			$this->_impersonate($this->id);
 			
 			return true;
 		}
@@ -118,12 +137,21 @@ final class Auth
 		return false;
 	}
 
+	/**
+	Determine if user is logged in
+		@public
+	**/
 	public function loggedIn()
 	{
 		return $this->_loggedIn;
 	}
 
-	public function impersonate( $user_to_impersonate )
+	/**
+	Re-instate user 
+		@param $user_to_impersonate int
+		@private
+	**/
+	private function _impersonate( $user_to_impersonate )
 	{
 		$db		=& Factory::getDBO();
 
@@ -142,7 +170,7 @@ final class Auth
 			$this->parent		= $row->parent;
 			$this->blocked		= $row->blocked;
 
-			$this->storeSessionData(md5($this->username), $row->password);
+			$this->_storeSessionData(md5($this->username), $row->password);
 			$this->_loggedIn	= true;
 
 			return true;
@@ -152,9 +180,9 @@ final class Auth
 	}
 
 	/**
-	* Helper functions
-	*/
-	// Attempt to login using data stored in the current session or saved cookie data
+	Attempt to login using data stored in the current session or saved cookie data
+		@private
+	**/
 	private function attemptSessionLogin()
 	{
 		$__config		= $this->__app->get('config');
@@ -165,7 +193,7 @@ final class Auth
 			
 			if (isset($_SESSION[$session_key]['__auth']) ) {
 				@list($username, $password)	= explode('.', $_SESSION[$session_key]['__auth']);
-				return $this->attemptLogin($username, $password);
+				return $this->_attemptLogin($username, $password);
 			}
 		}
 		else {
@@ -175,7 +203,7 @@ final class Auth
 
 				if (isset($cookie['__auth'])) {
 					@list($username, $password)	= explode('.', $_SESSION[$session_key]['__auth']);
-					return $this->attemptLogin($username, $password);
+					return $this->_attemptLogin($username, $password);
 				}
 			}
 		}
@@ -183,7 +211,13 @@ final class Auth
 		return false;
 	}
 
-	private function attemptLogin( $username, $password )
+	/**
+	Attempt to log credentials
+		@param $username string
+		@param $password string
+		@private
+	**/
+	private function _attemptLogin( $username, $password )
 	{
 		$db		=& Factory::getDBO();
 
@@ -203,7 +237,7 @@ final class Auth
 		}
 
 		// update last login date
-		if ($this->inSession($username, $password)) {
+		if ($this->_in_session($username, $password)) {
 			$now	= date('Y-m-d H:i:s');
 			$sql	= "UPDATE {TABLE_PREFIX}_users"
 			."\n SET `lastvisit` = " . $db->Quote($now)
@@ -218,13 +252,19 @@ final class Auth
 		$this->parent	= $row->parent;
 		$this->blocked	= $row->blocked;
 		
-		$this->storeSessionData($username, $password);
+		$this->_storeSessionData($username, $password);
 		$this->_loggedIn	= true;
 
 		return true;
 	}
 
-	private function storeSessionData( $username, $password )
+	/**
+	Store session data
+		@param $username string
+		@param $password string
+		@private
+	**/
+	private function _storeSessionData( $username, $password )
 	{
 		if (headers_sent()) {
 			return false;
@@ -255,7 +295,13 @@ final class Auth
 		return setcookie($session_key, $cookie, time() + 60 * $session_time, '/');
 	}
 
-	private function inSession( $username, $password )
+	/**
+	Validate if username and/or password is active
+		@param $username string
+		@param $password string
+		@private
+	**/
+	private function _in_session( $username, $password )
 	{
 		$__config		= $this->__app->get('config');
 		$session_key	= md5($__config->salt);
@@ -282,7 +328,12 @@ final class Auth
 		return false;
 	}
 
-	private function createHashedPassword( $password )
+	/**
+	Create a sha1-hashed password
+		@param $password string
+		@private
+	**/
+	private function _createHashedPassword( $password )
 	{
 		$__config	= $this->__app->get('config');
 		return sha1($password . $__config->salt);

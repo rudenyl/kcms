@@ -1,7 +1,8 @@
 <?php
 /*
 * $Id: sqlite.php, version 1.0
-*
+* SQLite-based storage class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -22,7 +23,7 @@ class sqlite_storage extends storage
 	
 	/**
 	Open SQLite resource
-		@param $url string
+		@param $dsn string
 		@public
 	**/
 	function connect( $dsn ) 
@@ -224,6 +225,7 @@ class sqlite_storage extends storage
 
 	/**
 	Get current database date
+		@param $unix_ts boolean
 		@public
 	**/
 	function curdate( $unix_ts=false ) 
@@ -246,9 +248,46 @@ class sqlite_storage extends storage
 	// to support other RDBMS functions/procedures
 	private function _loadUDF()
 	{
+		/* encryptions */
 		// md5
 		sqlite_create_function($this->_resource, 'md5', 'md5', 1);
 		// sha1
 		sqlite_create_function($this->_resource, 'sha1', 'sha1', 1);
+		
+		/* string functions */
+		// CONCAT
+		sqlite_create_function($this->_resource, 'CONCAT', 'sqlite__CONCAT');
+		// SUBSTRING_INDEX
+		sqlite_create_function($this->_resource, 'SUBSTRING_INDEX', 'sqlite__SUBSTRING_INDEX', 3);
+		
+		/* conditional statements */
+		// IF
+		sqlite_create_function($this->_resource, 'IF', 'sqlite__IF', 3);
+		// IFNULL
+		sqlite_create_function($this->_resource, 'IFNULL', 'sqlite__IFNULL');
+		
+		/* dates */
+		// DATEDIFF
+		sqlite_create_function($this->_resource, 'DATEDIFF', 'sqlite__DATEDIFF', 2);
+		// YEAR
+		sqlite_create_function($this->_resource, 'YEAR', 'sqlite__YEAR', 1);
+		// MONTH
+		sqlite_create_function($this->_resource, 'MONTH', 'sqlite__MONTH', 1);
+		// DAY
+		sqlite_create_function($this->_resource, 'DAY', 'sqlite__DAY', 1);
+		// NOW
+		sqlite_create_function($this->_resource, 'NOW', 'sqlite__NOW');
+		// DATE_FORMAT
+		sqlite_create_function($this->_resource, 'DATE_FORMAT', 'sqlite__DATE_FORMAT', 2);
+		// LAST_DAY
+		sqlite_create_function($this->_resource, 'LAST_DAY', 'sqlite__LAST_DAY', 1);
+	}
+	
+	// translate non-sqlite sql statements to sqlite
+	private function _translate( &$sql )
+	{
+		$sql	= str_replace('IGNORE', 'OR IGNORE', $sql);
+		$sql	= str_replace('TRUNCATE', 'DELETE FROM', $sql);
+		$sql	= str_replace('NOW()', "strftime('%Y-%m-%d', 'now')", $sql);
 	}
 }

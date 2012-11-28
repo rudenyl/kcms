@@ -1,8 +1,8 @@
 <?php
 /*
 * $Id: plugins.class.php, version 0.1.020711
-*
 * Plugin base class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -23,19 +23,21 @@ class Plugin
 	
 	/**
 	Add a plugin
-		@param $plugin mixed
+		@param $plugins object
 		@public
 	**/
 	public function addPlugin( $plugins )
 	{
-		if( !is_array($plugins) ) {
-			if( !is_object($plugins) ) return false;
+		if (!is_array($plugins)) {
+			if (!is_object($plugins)) {
+				return false;
+			}
 		
-			$this->_items[]		= $plugins;
+			$this->_items[]	= $plugins;
 		}
 		
-		foreach($plugins as $plugin) {
-			if( is_object($plugin) ) {
+		foreach ($plugins as $plugin) {
+			if (is_object($plugin)) {
 				$this->_items[]	= $plugin;
 			}		
 		}

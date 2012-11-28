@@ -1,8 +1,8 @@
 <?php
 /*
 * $Id: filelogging.class.php
-*
 * Logging using filesystem
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -13,6 +13,10 @@ class FileLogging extends Logging_Abstract
 	protected $_unique_id	= '';
 	protected $__logFormat	= "{date}: {log_message}\n";
 	
+	/**
+	Class constructor
+		@public
+	**/
 	function __construct( $unique_id=null )
 	{
 		if ($unique_id) {
@@ -20,6 +24,21 @@ class FileLogging extends Logging_Abstract
 		}
 	}
 	
+	/**
+	Get log file reference
+		@public
+	**/
+	function fetch()
+	{
+		return $this->_getLogFile();
+	}
+	
+	/**
+	Log message
+		@param $msg string
+		@param $date datetime
+		@public
+	**/
 	function store( $msg, $date=null )
 	{
 		// open in read/write mode
@@ -62,12 +81,11 @@ class FileLogging extends Logging_Abstract
 		return true;
 	}
 	
-	function getLogFile()
-	{
-		return $this->_getLogFile();
-	}
-	
-	function removeLogFile() 
+	/**
+	Delete log file reference
+		@public
+	**/
+	function delete() 
 	{
 		$logfile = $this->_getLogFile();
 		
@@ -75,8 +93,9 @@ class FileLogging extends Logging_Abstract
 	}
  
 	/**
-	* Helper functions
-	*/
+	Get log file
+		@private
+	**/
 	private function _getLogFile() 
 	{
 		if (empty($this->_logfile)) {

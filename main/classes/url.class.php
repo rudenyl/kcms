@@ -1,101 +1,32 @@
 <?php
 /*
 * $Id: url.class.php, version 0.1.030211
-*
-* URL function base class
+* URL manipulation base class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
 
 final class URL
 {
+	/**
+	Class constructor
+		@public
+	**/
 	function __construct()
 	{
 	}
 	
-	static public function build($base, $buffer)
+	/**
+	Routing implemention shorthand
+		@param $url string
+		@param $params string
+		@param $force_ssl boolean
+	**/
+	static public function _( $url, $params=null, $force_ssl=false )
 	{
-		// index
-		$buffer	= preg_replace('/([\"\'])\/(index.php)/', '$1'.$base.'$2', $buffer);
-		
-		// scripts/styles
-		$buffer	= preg_replace('/\b(href|src)\b=([\"\'])\//', '$1=$2'.$base, $buffer);
-		
-		// backgrounds
-		$buffer	= preg_replace('/(background\:url\()\//', '$1'.$base, $buffer);
-		
-		// remove index.php
-		$base_str	= str_replace('/', '\/', $base);
-		$buffer	= preg_replace('/'.$base_str.'index.php/', $base, $buffer);
-		
-		return $buffer;
-	}
-	
-	static public function parseSEFRoute()
-	{
-		return self::parseRoute();
-	}
-	
-	static public function buildSEFRoute($base, $buffer)
-	{
-		return $buffer;
-		
-		// smart detection commented out - slows page loading
-		/*
-		$uri_vars	= parse_url($base);
-		$basepath	= $uri_vars['host'].$uri_vars['path'];
-		
-		$i			= strlen($basepath);
-		if( $basepath{$i - 1} != '/' ) {
-			$basepath	.= '/';
-		}
-		$basepath	.= 'index.php';
-	
-		$regex	= "#((http|https|ftp)://$basepath\?.*?[(\"\')])#i";
-		
-		$callback_func	= '
-			if( !empty($matches[1]) ) {
-				return URL::_($matches[1]);
-			}
-			
-			return $matches[1];
-		';
-		$buffer	= preg_replace_callback($regex, create_function('$matches', $callback_func), 
-			$buffer);
-		
-		return $buffer;
-		*/
-	}
-	
-	static public function SEFTitle($title, $id=false)
-	{
-		//mb_internal_encoding("utf-8");
-		
-		$title	= trim( trim(stripslashes(html_entity_decode($title))) );
-		
-		// clean-up 1st pass
-		$title	= str_replace('&', 'and', $title);
-		
-		$title	= preg_replace('/[^a-zA-Z0-9_\- ]/', '', $title);
-		$title	= preg_replace( '#\$([0-9]*)#', '\\\$${1}', $title);
-		$title	= preg_replace('/\s+/', '-', $title );
-		
-		while(strpos($title, '--') !== false) {
-			$title	= str_replace('--', '-', $title);
-		}
-		
-		if( $id ) {
-			return $id .':'. $title;
-		}
-		else {
-			return $title;
-		}
-	}
-	
-	static public function _($url, $params=null, $force_ssl=false)
-	{
-		$__app_instance	=& Factory::getApplication();
-		$config			= $__app_instance->get('config');
+		$__app	=& Factory::getApplication();
+		$config	= $__app->get('config');
 		
 		$url	= str_replace('&amp;', '&', $url);
 		
@@ -198,7 +129,7 @@ final class URL
 		}
 		
 		// force ssl
-		if ($force_ssl && !self::isLocal()) {
+		if ($force_ssl && !self::_isLocal()) {
 			$uri	= explode(':', $url);
 			if (!empty($uri) && $uri{0} == 'http') {
 				$url	= str_replace('http://', 'https://', $url);
@@ -208,11 +139,91 @@ final class URL
 		return $url;
 	}
 	
+	/**
+	Create a SEF routing table
+		@param $segment array
+		@public
+	**/
+	static public function buildSEFRoute( $base, $buffer )
+	{
+		return $buffer;
+		
+		// smart detection commented out - slows page loading
+		/*
+		$uri_vars	= parse_url($base);
+		$basepath	= $uri_vars['host'].$uri_vars['path'];
+		
+		$i			= strlen($basepath);
+		if( $basepath{$i - 1} != '/' ) {
+			$basepath	.= '/';
+		}
+		$basepath	.= 'index.php';
+	
+		$regex	= "#((http|https|ftp)://$basepath\?.*?[(\"\')])#i";
+		
+		$callback_func	= '
+			if( !empty($matches[1]) ) {
+				return URL::_($matches[1]);
+			}
+			
+			return $matches[1];
+		';
+		$buffer	= preg_replace_callback($regex, create_function('$matches', $callback_func), 
+			$buffer);
+		
+		return $buffer;
+		*/
+	}
+	
+	/**
+	Parse SEF routing
+		@params $uri array
+		@public
+	**/
+	static public function parseSEFRoute()
+	{
+		return self::_parseRoute();
+	}
+	
+	/**
+	Create SEF title
+		@param $title string
+		@param $id int
+		@public
+	**/
+	static public function SEFTitle( $title, $id=null )
+	{
+		//mb_internal_encoding("utf-8");
+		
+		$title	= trim( trim(stripslashes(html_entity_decode($title))) );
+		
+		// clean-up 1st pass
+		$title	= str_replace('&', 'and', $title);
+		
+		$title	= preg_replace('/[^a-zA-Z0-9_\- ]/', '', $title);
+		$title	= preg_replace( '#\$([0-9]*)#', '\\\$${1}', $title);
+		$title	= preg_replace('/\s+/', '-', $title );
+		
+		while(strpos($title, '--') !== false) {
+			$title	= str_replace('--', '-', $title);
+		}
+		
+		if ($id) {
+			return $id .':'. $title;
+		}
+		else {
+			return $title;
+		}
+	}
+	
+	/**
+	Get url path
+		@public
+	**/
 	static function getURI()
 	{
-		//$config		=& Factory::getConfig();
-		$__app_instance	=& Factory::getApplication();
-		$config			= $__app_instance->get('config');
+		$__app		=& Factory::getApplication();
+		$config		= $__app->get('config');
 		
 		$root_path	= parse_url($config->baseURL);
 	
@@ -230,6 +241,38 @@ final class URL
 		return $uri;
 	}
 	
+	/**
+	Fix content buffer relative path
+		@param $base string
+		@param $buffer string
+		@public
+	**/
+	static public function tidy_path($base, $buffer)
+	{
+		// index
+		$buffer	= preg_replace('/([\"\'])\/(index.php)/', '$1'.$base.'$2', $buffer);
+		
+		// scripts/styles
+		$buffer	= preg_replace('/\b(href|src)\b=([\"\'])\//', '$1=$2'.$base, $buffer);
+		
+		// backgrounds
+		$buffer	= preg_replace('/(background\:url\()\//', '$1'.$base, $buffer);
+		
+		// remove index.php
+		$base_str	= str_replace('/', '\/', $base);
+		$buffer	= preg_replace('/'.$base_str.'index.php/', $base, $buffer);
+		
+		return $buffer;
+	}
+	
+	/**
+	Set url redirection
+		@param $url string
+		@param $use_SEF boolean
+		@param $params string
+		@param $force_ssl boolean
+		@public
+	**/
 	static function redirect( $url, $use_SEF=true, $params='', $force_ssl=false )
 	{
 		if( $use_SEF ) {
@@ -239,7 +282,7 @@ final class URL
 		// force ssl
 		$uri	= explode(':', $url);
 		if (!empty($uri)) {
-			if ($force_ssl && !self::isLocal()) {
+			if ($force_ssl && !self::_isLocal()) {
 				if ($uri{0} == 'http') {
 					$url	= str_replace('http://', 'https://', $url);
 				}
@@ -258,7 +301,11 @@ final class URL
 		}
 	}
 	
-	// Get redirection table mapping
+	/**
+	Get redirection table mapping
+		@param $newurl string
+		@public
+	**/
 	static function getRedirection( $newurl )
 	{
 		if( empty($newurl) ) {
@@ -277,6 +324,10 @@ final class URL
 		return $db->result();
 	}
 	
+	/**
+	Determine if uri is in secured layer
+		@public
+	**/
 	static function isSSL()
 	{
 		$https			= Request::getVar('HTTPS', null, 'SERVER');
@@ -286,15 +337,16 @@ final class URL
 	}
 	
 	/**
-	* Helper functions
-	*/
-	// Parse URL routing
-	private static function parseRoute( $url=null )
+	Parse URL routing
+		@param $url string
+		@private
+	**/
+	private static function _parseRoute( $url=null )
 	{
 		$segments	= array();
 		
 		if ($url) {
-			$uri	= self::buildURIFromURL($url);
+			$uri	= self::_buildURIFromURL($url);
 		}
 		else {
 			$uri	= URL::getURI();
@@ -406,12 +458,14 @@ final class URL
 	}
 	
 	/** 
-	* Create URI object from url
-	*/
-	private static function buildURIFromURL( $url )
+	Create URI object from url
+		@param $url string
+		@private
+	**/
+	private static function _buildURIFromURL( $url )
 	{
-		$__app_instance	=& Factory::getApplication();
-		$config			= $__app_instance->get('config');
+		$__app		=& Factory::getApplication();
+		$config		= $__app->get('config');
 		
 		$root_path	= parse_url($config->baseURL);
 		$url_path	= parse_url($url);
@@ -429,12 +483,16 @@ final class URL
 		
 		return $uri;
 	}
+	
 	/** 
-	* Gather redirection and save to database
-	*/
+	Save redirection uri to table
+		@param $oldurl string
+		@param $newurl string
+		@private
+	**/
 	private static function saveRedirection( $oldurl, $newurl )
 	{
-		$db	= Factory::getDBO();
+		$db		=& Factory::getDBO();
 		
 		// check if exists
 		// pass 1
@@ -491,7 +549,11 @@ final class URL
 		return false;
 	}
 	
-	private static function isLocal()
+	/**
+	Determine if system is in local machine
+		@private
+	**/
+	private static function _isLocal()
 	{
 		//return (in_array($_SERVER['HTTP_HOST'], array('127.0.0.1', 'localhost')));
 		

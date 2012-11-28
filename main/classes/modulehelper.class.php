@@ -1,14 +1,20 @@
 <?php
 /*
 * $Id: modulehelper.class.php, version 0.1.15082012
-*
 * Module Helper base class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
 
 final class ModuleHelper
 {
+	/**
+	Initialization shorthand
+		@param $load_type string
+		@param $params mixed
+		@public
+	**/
 	function _( $load_type, $params )
 	{
 		$func	= '_loadBy' . ucwords($load_type);
@@ -17,6 +23,11 @@ final class ModuleHelper
 		return self::$func($params);
 	}
 	
+	/**
+	Render module
+		@param $module object
+		@public
+	**/
 	function render( $module )
 	{
 		$html	= '';
@@ -44,6 +55,12 @@ final class ModuleHelper
 		return $html;
 	}
 	
+	/**
+	Get module count
+		@param $position string
+		@return int
+		@public
+	**/
 	function getModuleCount( $position )
 	{
 		$db		=& Factory::getDBO();
@@ -60,8 +77,10 @@ final class ModuleHelper
 	}
 	
 	/**
-	* Helper functions
-	*/
+	Load module by position
+		@param $position string
+		@private
+	**/
 	private function _loadByPosition( $position )
 	{
 		$db		=& Factory::getDBO();
@@ -77,6 +96,11 @@ final class ModuleHelper
 		return $db->fetch_object_list();
 	}
 	
+	/**
+	Load module by module id
+		@param $id int
+		@public
+	**/
 	private function _loadById( $id )
 	{
 		$db		=& Factory::getDBO();

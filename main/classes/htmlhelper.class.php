@@ -1,8 +1,8 @@
 <?php
 /*
 * $Id: htmlhelper.class.php, version 0.1.172011
-*
 * HTML helper base class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -10,8 +10,9 @@ defined('_PRIVATE') or die('Direct access not allowed');
 final class HTMLHelper
 {
 	/**
-	 * Helper loader method
-	 */
+	Helper loader method
+		@public
+	**/
 	static function _( $type )
 	{
 		$prefix 	= 'HelperClass';

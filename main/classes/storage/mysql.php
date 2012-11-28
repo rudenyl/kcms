@@ -1,7 +1,8 @@
 <?php
 /*
 * $Id: mysql.php, version 1.0
-*
+* MySQL-based storage class
+* @author: Dhens <rudenyl@gmail.com>
 */
 
 defined('_PRIVATE') or die('Direct access not allowed');
@@ -10,6 +11,7 @@ class mysql_storage extends storage
 {
 	private $_resource	= null;
 	private $_cursor	= null;
+	private $_query		= '';
 	
 	/**
 	Class constructor
@@ -22,7 +24,7 @@ class mysql_storage extends storage
 	
 	/**
 	Initialize a database connection
-		@param $url string
+		@param $dsn string
 		@public
 		
 		ex:	mysql://username:password@host/db
@@ -217,6 +219,15 @@ class mysql_storage extends storage
 	}
 
 	/**
+	Get last query
+		@public
+	**/
+	function last_query()
+	{
+		return $this->_query;
+	}
+
+	/**
 	Get table columns
 		@param $table_name string
 		@public
@@ -227,6 +238,21 @@ class mysql_storage extends storage
 		return $this->result_array();
 	}
 
+	/**
+	Check if table exists
+		@param $table_name string
+		@public
+	**/
+	function table_exists( $table_name )
+	{
+		$this->query("SHOW tables LIKE '%{$table_name}%'");
+		
+		$tables	= $this->result_array();
+		$n		= count($tables);
+		
+		return $n;
+	}
+	
 	/**
 	Get a database escaped string
 		@param $text string
@@ -239,6 +265,7 @@ class mysql_storage extends storage
 
 	/**
 	Get current database date
+		@param $unix_ts boolean
 		@public
 	**/
 	function curdate( $unix_ts=false ) 
