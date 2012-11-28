@@ -1,6 +1,8 @@
 <?php
 /* 
- * $Id: validation.php
+* $Id: validation.php
+* HTMLHelper plugin class
+* @author: Dhens <rudenyl@gmail.com>
 */
  
 class HelperClassValidation

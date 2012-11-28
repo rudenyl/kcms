@@ -1,6 +1,8 @@
 <?php
 /* 
  * $Id: time.php
+ * HTMLHelper plugin class
+ * @author: Dhens <rudenyl@gmail.com>
 */
  
 class HelperClassTime

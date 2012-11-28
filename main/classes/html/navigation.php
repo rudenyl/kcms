@@ -1,6 +1,8 @@
 <?php
 /* 
  * $Id: navigation.php
+ * HTMLHelper plugin class
+ * @author: Dhens <rudenyl@gmail.com>
 */
  
 class HelperClassNavigation 

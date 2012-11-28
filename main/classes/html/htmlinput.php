@@ -1,6 +1,8 @@
 <?php
 /* 
-* $Id: htmlinput.php
+ * $Id: htmlinput.php
+ * HTMLHelper plugin class
+ * @author: Dhens <rudenyl@gmail.com>
 */
 class HelperClassHtmlInput
 {

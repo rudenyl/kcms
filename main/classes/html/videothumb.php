@@ -1,6 +1,8 @@
 <?php
 /* 
  * $Id: videothumb.php
+ * HTMLHelper plugin class
+ * @author: Dhens <rudenyl@gmail.com>
 */
  
 class HelperClassVideoThumb

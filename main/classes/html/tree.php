@@ -1,6 +1,8 @@
 <?php
 /* 
  * $Id: tree.php
+ * HTMLHelper plugin class
+ * @author: Dhens <rudenyl@gmail.com>
 */
  
 class HelperClassTree

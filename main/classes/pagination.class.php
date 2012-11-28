@@ -82,13 +82,17 @@ final class Pagination
 			return ($total > $limit) ? ceil($total / $limit) : 0;
 		}
 		else {
-			if (isset($this)) {
+			if (isset($this->_num_pages)) {
 				return $this->_num_pages;
 			}
 			else {
-				self::$_num_pages;
+				if (isset(self::$_num_pages)) {
+					self::$_num_pages;
+				}
 			}
 		}
+		
+		return 0;
 	}
 	
 	/**
