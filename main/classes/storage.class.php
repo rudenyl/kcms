@@ -318,6 +318,15 @@ class storage
 	}
 	
 	/**
+	Get table prefix
+		@public
+	*/
+	function getTablePrefix()
+	{
+		return $this->_table_prefix;
+	}
+	
+	/**
 	array to a row object
 		@param $array array
 		@public

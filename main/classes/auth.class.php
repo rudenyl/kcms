@@ -101,7 +101,7 @@ final class Auth
 		;
 		$db->query($sql);
 
-		if($db->affected_rows() == 1) {
+		if ($db->affected_rows() == 1) {
 			$this->_impersonate($this->id);
 			
 			return true;
@@ -128,7 +128,7 @@ final class Auth
 		;
 		$db->query($sql);
 
-		if($db->affected_rows() == 1) {
+		if ($db->affected_rows() == 1) {
 			$this->_impersonate($this->id);
 			
 			return true;
@@ -163,7 +163,7 @@ final class Auth
 		$db->query($sql);
 		$row	= $db->fetch_object();
 
-		if( is_object($row) ) {
+		if (is_object($row)) {
 			$this->id			= $row->id;
 			$this->username		= $row->username;
 			$this->level		= $row->level;
@@ -228,11 +228,11 @@ final class Auth
 		;
 		$db->query($sql);
 		$row	= $db->fetch_object();
-		if( !$row ) {
+		if (!$row) {
 			return false;
 		}
 		
-		if( $password != $row->password ) {
+		if ($password != $row->password) {
 			return false;
 		}
 
@@ -275,17 +275,10 @@ final class Auth
 		$session_key	= md5($__config->salt);
 		$auth_key		= $username .'.'. $password;
 		
-		// session types:
-		// --------------
-		// session	- PHP Session
-		// cookie	- cookie-based
-		// db		- database
-		if( isset($__config->session_type) && ($__config->session_type == 'session') ) {
-			@session_start();
-			
-			$_SESSION[$session_key]['__auth']	= $auth_key;
-		}
-		
+		// add to session
+		@session_start();
+		$_SESSION[$session_key]['__auth']	= $auth_key;
+		// add to cookie
 		$cookie		= json_encode(array('__auth' => $auth_key));
 		
 		// get session lifetime (minutes)
@@ -307,7 +300,7 @@ final class Auth
 		$session_key	= md5($__config->salt);
 		$auth_key		= $username .'.'. $password;
 		
-		if( isset($__config->session_type) && ($__config->session_type == 'session') ) {
+		if (isset($__config->session_type) && ($__config->session_type == 'session')) {
 			@session_start();
 			
 			if (isset($_SESSION[$session_key]['__auth'])) {
@@ -316,10 +309,10 @@ final class Auth
 		}
 		else {
 			// attempt from saved cookie
-			if( isset($_COOKIE[$session_key]) && is_string($_COOKIE[$session_key]) ) {
+			if (isset($_COOKIE[$session_key]) && is_string($_COOKIE[$session_key])) {
 				$cookie = json_decode($_COOKIE[$session_key], true);
 
-				if( isset($cookie['__auth']) ) {
+				if (isset($cookie['__auth'])) {
 					return (($cookie['__auth'] == $auth_key));
 				}
 			}

@@ -18,7 +18,16 @@ final class Application
 	function __construct() 
 	{
 		// set global session identification
-		@session_start();
+		$config	=& Factory::getConfig();
+		
+		switch (@$config->session_type) {
+			case 'db':
+				$sess_db	= new SessionDBHandler();
+				$sess_db->init();
+				break;
+		}
+		
+		session_start();
 		self::$global['SESSION_ID']	= session_id();
 		
 		// init content buffer
