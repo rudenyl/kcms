@@ -66,7 +66,7 @@ final class Application
 				
 				foreach ($values as $value) {
 					// process key settings
-					switch($key) {
+					switch ($key) {
 						case 'JS':
 							if (!$raw) {
 								$value	= "<script type=\"text/javascript\" src=\"$value\"></script>";
@@ -162,7 +162,7 @@ final class Application
 	{
 		$session_id	= self::get('SESSION_ID');
 		
-		switch($hash_type) {
+		switch ($hash_type) {
 			case 'none':
 				break;
 				
@@ -544,7 +544,7 @@ final class Application
 					
 					// pack
 					$packedJS	= $matches[1];
-					switch($pack_method) {
+					switch ($pack_method) {
 						case "packer":
 							$packer		= new JavaScriptPacker($matches[1]);
 							$packedJS	= $packer->pack();

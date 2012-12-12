@@ -233,7 +233,7 @@ final class Factory
 		static $mobile_detect;
 	
 		// create if don't exists
-		if ( !is_object($mobile_detect) ) {
+		if (!is_object($mobile_detect)) {
 			require_once( PATH_CLASSES .DS. '3rdparty' .DS. 'Mobile_Detect.php' );
 			
 			// initialize
@@ -273,7 +273,7 @@ final class Request
 
 		// Get the value by request method
 		$request_method	= strtoupper($request_method);
-		switch($request_method) {
+		switch ($request_method) {
 			case 'GET':
 				$data		=& $_GET;
 				break;
@@ -317,13 +317,13 @@ final class Request
 		$old_value	= (isset($_REQUEST[$name]) && $_REQUEST[$name] !== null) ? $_REQUEST[$name] : null;
 		$old_value	= self::_clean($old_value);
 		
-		if ( empty($request_method) ) {
+		if (empty($request_method)) {
 			$request_method	= $_SERVER['REQUEST_METHOD'];
 		}
 		
 		// Get the value by request method
 		$request_method	= strtoupper($request_method);
-		switch($request_method) {
+		switch ($request_method) {
 			case 'GET':
 				$_GET[$name]		= $value;
 				$_REQUEST[$name]	= $value;
