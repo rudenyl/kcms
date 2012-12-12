@@ -47,39 +47,39 @@ final class Application
 			'base|title|meta|styles|js|config|crumbs|auth'
 		);
 		
-		if( in_array($key, $allowed_keys) ) {
+		if (in_array($key, $allowed_keys)) {
 			$key	= strtoupper($key);
 			$arr	= explode('|', 'META|STYLES|JS|CRUMBS' );	// array`ed item keys
 			
-			if( in_array($key, $arr) ) {
-				if( !isset(self::$global[$key]) ) {
+			if (in_array($key, $arr)) {
+				if (!isset(self::$global[$key])) {
 					self::$global[$key]	= array();
 				}
 				
 				$values	= array();
-				if( !is_array($value) ) {
+				if (!is_array($value)) {
 					$values[]	= $value;
 				}
 				else {
 					$values		= array_merge($values, $value);
 				}
 				
-				foreach($values as $value) {
+				foreach ($values as $value) {
 					// process key settings
 					switch($key) {
 						case 'JS':
-							if( !$raw ) {
+							if (!$raw) {
 								$value	= "<script type=\"text/javascript\" src=\"$value\"></script>";
 							}
 							break;
 						case 'STYLES':
-							if( !$raw ) {
+							if (!$raw) {
 								$value	= "<link rel=\"stylesheet\" href=\"$value\" type=\"text/css\" />";
 							}
 							break;
 					}
 				
-					if( $head ) {
+					if ($head) {
 						array_unshift(self::$global[$key], $value);
 					} 
 					else {
@@ -103,10 +103,10 @@ final class Application
 	{
 		$value	= null;
 	
-		if( isset(self::$global[ strtoupper($key) ]) ) {
-			$value	= self::$global[ strtoupper($key) ];
+		if (isset(self::$global[strtoupper($key)])) {
+			$value	= self::$global[strtoupper($key)];
 			
-			if( empty($value) ) {
+			if (empty($value)) {
 				$value	= $default_value;
 			}
 		}
@@ -140,7 +140,7 @@ final class Application
 		if (empty($id)) {
 			$id	= 'success';
 		}
-		if( isset($_SESSION[$id]['_app-notification']) ) {
+		if (isset($_SESSION[$id]['_app-notification'])) {
 			$notification	= $_SESSION[$id]['_app-notification'];
 			
 			// clear on last fetch
@@ -190,7 +190,7 @@ final class Application
 		$controllerPath	= PATH_APPLICATIONS .DS. $app .DS. 'controllers' .DS. $name.'.php';
 		
 		// load controller
-		if( !($found = file_exists($controllerPath) && is_file($controllerPath)) ) {
+		if (!($found = file_exists($controllerPath) && is_file($controllerPath))) {
 			// load default
 			$name			= 'default';
 			$controllerPath	= PATH_APPLICATIONS .DS. $app .DS. 'controllers' .DS. $name.'.php';
@@ -198,7 +198,7 @@ final class Application
 			$found			= (file_exists($controllerPath) && is_file($controllerPath));
 		}
 		
-		if( $found ) {
+		if ($found) {
 			// load controller
 			require_once( $controllerPath );
 			
@@ -249,10 +249,10 @@ final class Application
 		$config	= $this->get('config');
 		
 		$template	= isset($config) ? $config->template : 'default';
-		if( 'component' === Request::getVar('format') ) {
+		if ('component' === Request::getVar('format')) {
 			$tpl_path	= PATH_TEMPLATES .DS. $template .DS. 'component.php';
 		}
-		else if( 'custom' === Request::getVar('format') ) {
+		else if ('custom' === Request::getVar('format')) {
 			$tpl_path	= PATH_TEMPLATES .DS. $template .DS. 'custom.php';
 		}
 		else {
@@ -260,7 +260,7 @@ final class Application
 		}
 		
 		ob_start();
-		if( file_exists($tpl_path) ) {
+		if (file_exists($tpl_path)) {
 			include $tpl_path;
 		}
 		
@@ -279,16 +279,16 @@ final class Application
 		preg_match_all('|<site:modules\[(.*)\]\/>|', self::$global['RESPONSE'], $matches);
 		
 		// load module files
-		if ( isset($matches[1]) && count($matches[1]) > 0) {
-			foreach($matches[1] as $mtxt) {
+		if (isset($matches[1]) && count($matches[1]) > 0) {
+			foreach ($matches[1] as $mtxt) {
 				$html		= '';
 				$modules	= explode('|', $mtxt);
 				
 				if (count($modules) > 0) {
-					foreach($modules as $module) {
+					foreach ($modules as $module) {
 						// get params
 						preg_match('/\{(.*)\}/', $module, $mparams);
-						if( !empty($mparams) ) {
+						if (!empty($mparams)) {
 							$module	= str_replace($mparams[0], '', $module);
 							
 							$mparams	= json_decode( $mparams[0] );
@@ -327,7 +327,7 @@ final class Application
 	{
 		$modulePath	= PATH_MODULES .DS. $module_name .DS. $module_name .'.php';
 		
-		if ( file_exists($modulePath) && is_file($modulePath) ) {
+		if (file_exists($modulePath) && is_file($modulePath)) {
 			ob_start();
 			
 			// load module
@@ -357,7 +357,7 @@ final class Application
 		);
 		
 		// meta 
-		if( isset(self::$global['META']) && is_array(self::$global['META']) ) {
+		if (isset(self::$global['META']) && is_array(self::$global['META'])) {
 			$head	= array_merge($head, self::$global['META']);
 		}
 		
@@ -365,7 +365,7 @@ final class Application
 		$config	= $this->get('config');
 		$title	= $config->siteTitle;
 		
-		if( isset(self::$global['TITLE']) ) {
+		if (isset(self::$global['TITLE'])) {
 			$title	= self::$global['TITLE'];
 		}
 		$title	= '<title>'.$title.'</title>';
@@ -373,7 +373,7 @@ final class Application
 		
 		// set base href
 		$uri	= URL::getURI();
-		if( $uri ) {
+		if ($uri) {
 			$base_url	= '<base href="' .$config->baseURL.$uri->_url. '" />';
 			array_unshift($head, $base_url);
 		}
@@ -390,18 +390,18 @@ final class Application
 		// Scripts, styles
 		preg_match('|<site:scripts\[(.*)\]\/>|', self::$global['RESPONSE'], $match);
 		
-		if ( isset($match[1]) && !empty($match[1]) ) {
+		if (isset($match[1]) && !empty($match[1])) {
 			$html			= array();
 			$allowed_keys	= explode('|', 'JS|STYLES');
 			$declarations	= explode(',', $match[1]);
 			
-			foreach($declarations as $k) {
-				$k			= strtoupper($k);
-				if( in_array($k, $allowed_keys) ) {
-					if( isset(self::$global[$k]) ) {
+			foreach ($declarations as $k) {
+				$k	= strtoupper($k);
+				if (in_array($k, $allowed_keys)) {
+					if (isset(self::$global[$k])) {
 						$values	= array_unique(self::$global[$k]);
 						
-						foreach($values as $v) {
+						foreach ($values as $v) {
 							$html[]	= $v;
 						}
 					}
@@ -409,7 +409,7 @@ final class Application
 			}
 			
 			// display
-			$html			= implode("\n", $html);
+			$html	= implode("\n", $html);
 			self::$global['RESPONSE']	= str_replace('<site:scripts['.$match[1].']/>', $html, self::$global['RESPONSE']);
 		}
 	}
@@ -463,7 +463,7 @@ final class Application
 			$content_raw_data	= ob_get_clean();
 			
 			// display output for raw
-			if( 'raw' === Request::getVar('format') ) {
+			if ('raw' === Request::getVar('format')) {
 				$load_template				= false;
 				
 				self::$global['RESPONSE']	= $content_raw_data;
@@ -471,7 +471,7 @@ final class Application
 		}
 		
 		// this process is skipped when calling raw html format
-		if( $load_template ) {
+		if ($load_template) {
 			// load template body
 			self::$global['RESPONSE']	= $this->getTemplateBody();
 			
@@ -505,12 +505,12 @@ final class Application
 		// tidy paths
 		self::$global['RESPONSE']	= URL::tidy_path($config->baseURL, self::$global['RESPONSE']);
 		// SEF
-		if($config->SEFURL) {
+		if ($config->SEFURL) {
 			self::$global['RESPONSE']	= URL::buildSEFRoute($config->baseURL, self::$global['RESPONSE']);
 		}
 
 		// pack javascripts
-		if( isset($config->packJS) && ($config->packJS !== false) ) {
+		if (isset($config->packJS) && ($config->packJS !== false)) {
 			$callback_func	= '
 				$app			=& Factory::getApplication();
 				$config			= $app->get("config");
@@ -522,12 +522,12 @@ final class Application
 				
 				// get NOPACK clear tag
 				preg_match(\'/pack="(.*?)"/\', $default, $nopack);
-				if( !empty($nopack) ) {
+				if (!empty($nopack)) {
 					$pack_types	= explode("|", "none|packer|minify");
 					$pack_type	= $nopack[1];
 					
-					if( isset($pack_type) && in_array($pack_type, $pack_types) ) {
-						if( $pack_type != "none" ) {
+					if (isset($pack_type) && in_array($pack_type, $pack_types)) {
+						if ($pack_type != "none") {
 							$pack_method	= $nopack[1];
 						}
 					
@@ -538,7 +538,7 @@ final class Application
 					$default	= preg_replace(\'/pack="(.*?)"/\', "", $default);
 				}
 			
-				if( !empty($matches[1]) && $pack_js ) {
+				if (!empty($matches[1]) && $pack_js) {
 					// set placeholder
 					$script	= str_replace($matches[1], "\n@script", $default);
 					
@@ -579,7 +579,7 @@ final class Application
 		}
 		
 		// compress
-		if( isset($config->compress_output) && $config->compress_output === true ) {
+		if (isset($config->compress_output) && $config->compress_output === true) {
 			// we're forcing output compression on
 			ini_set('zlib.output_compression', 'On');
 			
@@ -596,17 +596,17 @@ final class Application
 	**/
 	private function compress( $buffer )
 	{
-		if( !isset($_SERVER['HTTP_ACCEPT_ENCODING']) ) {
+		if (!isset($_SERVER['HTTP_ACCEPT_ENCODING'])) {
 			return $buffer;
 		}
 
 		// is it supported?
-		if( !extension_loaded('zlib') || ini_get('zlib.output_compression') ) {
+		if (!extension_loaded('zlib') || ini_get('zlib.output_compression')) {
 			return $buffer;
 		}
 
 		// headers sent already?
-		if( headers_sent() ) {
+		if (headers_sent()) {
 			return $buffer;
 		}
 
@@ -614,14 +614,14 @@ final class Application
 		$gz_buffer	= gzencode($buffer, 4);
 
 		$encoding	= null;
-		if( strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false ) {
+		if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false) {
 			$encoding = 'gzip';
 		}
-		if( strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'x-gzip') !== false ) {
+		if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'x-gzip') !== false) {
 			$encoding = 'x-gzip';
 		}
 
-		if($encoding !== null) {
+		if ($encoding !== null) {
 			header('Content-Encoding', $encoding);
 			header('X-Content-Encoded-By', 'XRFW');
 		}
