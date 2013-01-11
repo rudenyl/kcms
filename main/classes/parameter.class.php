@@ -127,6 +127,7 @@ final class Parameter
 			
 			if ($s_pos !== false) {
 				$k	= substr($s, 0, $s_pos);
+				$k	= trim($k);
 				$v	= substr($s, $s_pos + 1, strlen($s) - $s_pos);
 				
 				if (empty($k)) {

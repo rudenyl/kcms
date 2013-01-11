@@ -187,10 +187,16 @@ class View
 	**/
 	public function loadTemplate( $layout='default' )
 	{
+		$config	=& Factory::getConfig();
+		
 		$html	= '';
 		
 		if (is_subclass_of($this, 'View')) {
-			$tpl_path	= PATH_APPLICATIONS .DS. $this->_appName .DS. 'views' .DS. $this->_name .DS. 'tmpl' .DS. $layout.'.php';
+			// load from current theme
+			$tpl_path	= PATH_TEMPLATES .DS. $config->template .DS. 'html' .DS. $this->_appName .DS. $this->_name .DS. $layout.'.php';
+			if (!file_exists($tpl_path) || !is_file($tpl_path)) {
+				$tpl_path	= PATH_APPLICATIONS .DS. $this->_appName .DS. 'views' .DS. $this->_name .DS. 'tmpl' .DS. $layout.'.php';
+			}
 
 			// load layout
 			if (file_exists($tpl_path) && is_file($tpl_path)) {
