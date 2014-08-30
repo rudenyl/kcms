@@ -35,7 +35,7 @@ final class Utility
 		$max			=	strlen( $chars ) - 1;
 		$token			=	'';
 		$name 			=  session_name();
-		for( $i = 0; $i < $length; ++$i ) {
+		for( $i = 0; $i < $length; ++$i) {
 			$token .=	$chars[ (rand( 0, $max )) ];
 		}
 
@@ -52,19 +52,19 @@ final class Utility
 	{
 		$args	= explode('.', $key);
 
-		if( count($args) > 1 ) {
+		if( count($args) > 1) {
 			@session_start();
 			
 			$key		= $args{0};
 			$request	= $args{1};
 			
 			$cur_value	= '';
-			if( isset($_SESSION[$key][$request]) ) {
+			if( isset($_SESSION[$key][$request])) {
 				$cur_value	= $_SESSION[$key][$request];
 			}
 			
 			$vars		= Utility::getParams(null, false);
-			if( isset($vars[$request]) ) {
+			if( isset($vars[$request])) {
 				$cur_value					= $vars[$request];
 				$_SESSION[$key][$request]	= $cur_value;
 			}
@@ -85,7 +85,7 @@ final class Utility
 	{
 		$requests	= explode('|', $request);
 
-		if( count($requests) < 1 ) {
+		if( count($requests) < 1) {
 			return false;
 		}
 		
@@ -94,9 +94,9 @@ final class Utility
 		// create key=value mapping
 		$keys		= array();
 		$key_values	= array();
-		if( $_SESSION ) {
+		if( $_SESSION) {
 			foreach($_SESSION as $k=>$v) {
-				if( is_array($v) ) {
+				if( is_array($v)) {
 					foreach($v as $kk=>$vv) {
 						$keys[]				= $k .'.'. $kk;
 						$key_values[$kk]	= $k;
@@ -112,8 +112,8 @@ final class Utility
 		foreach($requests as $request) {
 			@list($k, $r)	= explode('.', $request);
 			
-			if( !$strict ) {
-				if( in_array($r, array_keys($key_values)) ) {
+			if( !$strict) {
+				if( in_array($r, array_keys($key_values))) {
 					$k	= $key_values[$r];
 				}
 			}
@@ -136,15 +136,15 @@ final class Utility
 	{
 		$types	= array();
 		
-		if( $type === null ) {
+		if( $type === null) {
 			//$types[]	= 'REQUEST';
 			$types[]	= 'GET';
 			$types[]	= 'POST';
 		} else {
-			if( is_array($type) ) {
+			if( is_array($type)) {
 				foreach($type as $_t) array_push($types, $_t);
 			}
-			else if( $type=='all' ) {
+			else if( $type=='all') {
 				$types[]	= 'REQUEST';
 				$types[]	= 'SERVER';
 				$types[]	= 'SESSION';
@@ -182,11 +182,11 @@ final class Utility
 					break;
 			}
 		
-			if( is_array($data) ) {
+			if( is_array($data)) {
 				foreach($data as $k=>$v) {
 					if( in_array($k, $exclude) ) continue;
 					
-					if( is_array($v) ) {
+					if( is_array($v)) {
 						$_k				= $k;
 						list($k, $v)	= each($v);
 						$k				= $_k. '[' .$k . ']';
@@ -259,8 +259,8 @@ final class Utility
 	static function getClientIP( $exclude_proxy=false )
 	{
 		$proxy	= '';
-		if ( isset($_SERVER["HTTP_X_FORWARDED_FOR"]) ) {
-			if ( isset($_SERVER["HTTP_CLIENT_IP"]) ) {
+		if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
+			if (isset($_SERVER["HTTP_CLIENT_IP"])) {
 				$proxy = $_SERVER["HTTP_CLIENT_IP"];
 			} 
 			else {
@@ -270,7 +270,7 @@ final class Utility
 			$ip = $_SERVER["HTTP_X_FORWARDED_FOR"];
 		} 
 		else {
-			if ( isset($_SERVER["HTTP_CLIENT_IP"]) ) {
+			if (isset($_SERVER["HTTP_CLIENT_IP"])) {
 				$ip = $_SERVER["HTTP_CLIENT_IP"];
 			} 
 			else {
@@ -341,7 +341,7 @@ final class Utility
 	**/
     function wordLimit( $str, $limit=100, $end_char='&#8230;') 
 	{
-		if ( trim($str) == '' ) {
+		if (trim($str) == '') {
 			return $str;
 		}
 		
@@ -349,7 +349,7 @@ final class Utility
 		$str	= strip_tags($str);
 		
 		preg_match('/\s*(?:\S*\s*){'.(int) $limit.'}/', $str, $matches);
-		if ( strlen($matches[0]) == strlen($str) ) {
+		if (strlen($matches[0]) == strlen($str)) {
 			$end_char	= '';
 		}
 		
@@ -365,6 +365,10 @@ final class Utility
 	**/
 	static function CleanText( $text, $tidy_up=false, $convert_special_chars=true ) 
 	{
+		if (is_array($text)) {
+			return;
+		}
+		
 		// remove any javascript - OLLY
 		// http://forum.joomla.org/index.php?topic=194800.msg1036857
 		$regex	= "'<script[^>]*?>.*?</script>'si";
@@ -385,7 +389,7 @@ final class Utility
 		$text	= preg_replace($regex, " ", $text);
 		
 		// convert newlines and tabs to spaces
-		if( $convert_special_chars ) {
+		if( $convert_special_chars) {
 			$text	= str_replace(array("\r\n", "\r", "\n", "\t", chr(160)), " ", $text);
 		}
 		
@@ -400,7 +404,7 @@ final class Utility
 				// add a space after any full stops or comma's for readability
 				// added as strip_tags was often leaving no spaces
 				if (($text{$cnt} == '.') || ($text{$cnt} == ',')) {
-					if ( isset($text{$cnt+1}) && ($text{$cnt+1} != ' ') ) {
+					if (isset($text{$cnt+1}) && ($text{$cnt+1} != ' ')) {
 						$text = substr_replace($text, ' ', $cnt + 1, 0);
 					}
 				}
@@ -421,7 +425,7 @@ final class Utility
 		// init db
 		$db		=& Factory::getDBO();
 		
-		if( get_magic_quotes_gpc() ) {
+		if( get_magic_quotes_gpc()) {
 			$var	= stripslashes($var);
 		}
 		
@@ -431,7 +435,7 @@ final class Utility
 			$var	= @mysql_real_escape_string($var);
 		}
 		
-		if( $convert_to_html ) {
+		if( $convert_to_html) {
 			$var	= htmlentities($var);
 		}
 		
@@ -469,7 +473,7 @@ final class Utility
 		$array	= array();
 		
 		if (is_object($data)) {
-			foreach( get_object_vars($data) as $k=>$v ) {
+			foreach (get_object_vars($data) as $k=>$v) {
 				$array[$k]	= $v;
 			}
 		}
@@ -542,7 +546,7 @@ final class Utility
 		// clean-up 1st pass
 		$text	= str_replace('&', 'and', $text);
 		
-		$text	= preg_replace('/[^a-zA-Z0-9._\- ]/', '', $text);
+		$text	= preg_replace('/[^a-zA-Z0-9_\- ]$/u', '', $text);
 		$text	= preg_replace( '#\$([0-9]*)#', '\\\$${1}', $text);
 		$text	= preg_replace('/\s+/', '-', $text );
 		
@@ -579,58 +583,108 @@ final class Utility
 	function parse_ini_file( $filename, $process_sections=false ) 
 	{
 		if (Utility::is_func_disabled('parse_ini_file')) {
-			// source: http://forum.dokuwiki.org/post/6634
-			$lines			= file($filename);
-			$section		= '';
+			// source: http://php.tonnikala.org/manual/ru/function.parse-ini-file.php
+			// @modified 
+			$ini	= file($filename);
+			if (count($ini) == 0) {
+				return array();
+			}
+
+			$sections	= array();
+			$values		= array();
+			$result		= array();
+			$_globals	= array();
 			
-			for ($line_num=0; $line_num <= sizeof($lines); $line_num++) {
-				$filedata	= $lines[$line_num];
-				$dataline	= trim($filedata);
-				$firstchar	= substr($dataline, 0, 1);
+			$i	= 0;
+			foreach ($ini as $line) {
+				$line	= trim($line);
+				$line	= str_replace("\t", " ", $line);
+
+				// Comments
+				if (!preg_match('/^[a-zA-Z0-9[_]/', $line)) {
+					continue;
+				}
+
+				// Sections
+				if ($line{0} == '[') {
+					$tmp		= explode(']', $line);
+					$sections[]	= trim(substr($tmp[0], 1));
+					$i++;
+					continue;
+				}
+
+				// Key-value pair
+				list($key, $value)	= explode('=', $line, 2);
+				$key	= trim($key);
+				$value	= trim($value);
 				
-				if ($firstchar != ';' && $dataline != '') {
-					//It's an entry (not a comment and not a blank line)
-					if ($firstchar == '[' && substr($dataline, -1, 1) == ']' && $process_sections) {
-						//It's a section
-						$section	= substr($dataline, 1, -1);
+				if (strstr($value, ";")) {
+					$tmp	= explode(';', $value);
+					if (count($tmp) == 2) {
+						if ((($value{0} != '"') && ($value{0} != "'")) ||
+								preg_match('/^".*"\s*;/', $value) || preg_match('/^".*;[^"]*$/', $value) ||
+								preg_match("/^'.*'\s*;/", $value) || preg_match("/^'.*;[^']*$/", $value) ){
+							$value	= $tmp[0];
+						}
 					} 
 					else {
-						//It's a key...
-						$delimiter	= strpos($dataline, '=');
-						if ($delimiter > 0) {
-							//...with a value
-							$key					= trim(substr($dataline, 0, $delimiter));
-							$data[$section][$key]	= '';
-							$value					= trim(substr($dataline, $delimiter + 1));
-							
-							while (substr($value, -1, 1) == ';') {
-								//...value continues on the next line
-								$value					= substr($value, 0, strlen($value)-1);
-								$data[$section][$key]	.= stripcslashes($value);
-								$line_num++;
-								
-								$value					= trim($lines[$line_num]);
-							}
-							
-							$data[$section][$key]		.= stripcslashes($value);
-							$data[$section][$key]		= trim($data[$section][$key]);
-							
-							if (substr($data[$section][$key], 0, 1) == '"' && substr($data[$section][$key], -1, 1) == '"') {
-								$data[$section][$key]	= substr($data[$section][$key], 1, -1);
-							}
-						}
+						if ($value{0} == '"') {
+							$value	= preg_replace('/^"(.*)".*/', '$1', $value);
+						} 
+						elseif ($value{0} == "'") {
+							$value	= preg_replace("/^'(.*)'.*/", '$1', $value);
+						} 
 						else {
-							//...without a value
-							$data[$section][trim($dataline)]	= '';
+							$value	= $tmp[0];
 						}
+					}
+				}
+				
+				$value	= trim($value);
+				$value	= trim($value, "'\"");
+
+				if ($i == 0) {
+					if (strpos($line, '[]') !== false) {
+						$key				= str_replace('[]', '', $key);
+						$_globals[$key][]	= $value;
+					} 
+					else {
+						$_globals[$key]		= $value;
 					}
 				} 
 				else {
-					//It's a comment or blank line.  Ignore.
+					if (strpos($line, '[]') !== false) {
+						$key					= str_replace('[]', '', $key);
+						$values[$i-1][$key][]	= $value;
+					} 
+					else {
+						$values[$i-1][$key]		= $value;
+					}
 				}
 			}
+
+			if ($process_sections == true) {
+				for ($j	= 0; $j < $i; $j++) {
+					if ($process_sections == true) {
+						$result[$sections[$j]]	= @$values[$j];
+					} 
+					else {
+						$result	= @$values[$j];
+					}
+				}
 			
-			return $data;
+				return $result + $_globals;
+			}
+			else {
+				$value_arr	= array();
+				foreach ($values as $i=>$items) {
+					foreach ($items as $k=>$v) {
+						$value_arr[$k]	= $v;
+					}
+				}
+				
+				return $value_arr;
+			}
 		}
 		else {
 			return parse_ini_file($filename, $process_sections);
@@ -660,7 +714,7 @@ final class Utility
 		$key_2		= substr($key, 3, strlen($key));
 		
 		// re-build key
-		$key		= $key_1 .'|'. $key_2 . $suffix;
+		$key		= $key_1 .'-'. $key_2 . $suffix;
 		
 		return $key;
 	}
@@ -675,8 +729,9 @@ final class Utility
 		$key	= substr($key, 0, strlen($key) - 3);
 		$key	= strtolower($key);
 		
-		$key	= str_replace('%7c', '', $key);
+		$key	= str_replace('%7C', '', $key);
 		$key	= str_replace('|', '', $key);
+		$key	= str_replace('-', '', $key);
 		
 		return $key;
 	}
@@ -701,6 +756,31 @@ final class Utility
 		
 		return $text;
 	}
+
+	/**
+	String escape
+		@param $text string
+		@public
+	*/
+	static function escape( $text, $strip=false )
+	{
+		if (is_array($text)) {
+			return array_map(__METHOD__, $text);
+		}
+
+		if (!empty($text) && is_string($text)) { 
+			$text	= str_replace(array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), $text);
+			
+			if (in_array(strtolower(ini_get( 'magic_quotes_gpc')), array('1', 'on'))) {
+				return $strip ? stripslashes($text) : addslashes($text);
+			}
+			else {
+				return $strip ? stripslashes($text) : str_replace(array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $text); 
+			}
+		} 
+
+		return $text;
+	} 	
 	
 	/**
 	Rounds a float ("round" allias)
@@ -732,5 +812,58 @@ final class Utility
 		}
 		
 		return round($num, $precision);
+	}
+
+	/**
+	Returns size in bytes
+		@param $val mixed
+		@public
+	*/
+	static function toBytes( $val )
+	{
+		if (empty($val)) {
+			return 0;
+		}
+
+		$val	= trim($val);
+		preg_match('#([0-9]+)[\s]*([a-z]+)#i', $val, $matches);
+
+		$suffix	= '';
+		if (isset($matches[2])) {
+			$suffix	= $matches[2];
+		}
+
+		if (isset($matches[1])) {
+			$val	= (int)$matches[1];
+		}
+
+		switch (strtoupper($suffix)) {
+			case 'G':
+				$val	*= 1024;
+			case 'M':
+				$val	*= 1024;
+			case 'K':
+				$val	*= 1024;
+		}
+
+		return (int)$val;
+	}
+	
+	/**
+	Simple code minifier
+		@param $text string
+		@public
+	**/
+	static function minify( $text )
+	{
+		$text	= preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $text);
+		$text	= str_replace(array("\r\n", "\r", "\n", "\t", '  ', '    ', '    '), '', $text);
+		$text	= str_replace(': ', ':', $text);
+		$text	= str_replace('{ ', '{', $text);
+		$text	= str_replace(' }', '}', $text);
+		$text	= str_replace(' {', '{', $text);
+		$text	= str_replace('; ', ';', $text);
+		
+		return $text;
 	}
 }

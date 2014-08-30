@@ -9,6 +9,7 @@ defined('_PRIVATE') or die('Direct access not allowed');
 
 class storage 
 {
+	protected $_connected		= false;
 	protected $_debug			= 0;	
 	protected $_table_prefix	= '';
 	protected $_timezone		= '';
@@ -34,7 +35,7 @@ class storage
 		$url	= parse_url($dsn);
 		// sniff type from scheme
 		if ($type === null) {
-			@list($type, $_port)	= explode(':', $url['scheme']);
+			@list($type, $_port)	= explode(':', @$url['scheme']);
 		}
 
 		$storage_path	= PATH_CLASSES .DS. 'storage' .DS. $type .'.php';
@@ -56,8 +57,11 @@ class storage
 		if (class_exists($class_inst, false)) {
 			$dbo	= new $class_inst();
 			
+			// set timezone
+			$dbo->set_timezone($this->_timezone);
+			
 			// attemp to connect to db
-			$dbo->connect($dsn);
+			$this->_connected	= $dbo->connect($dsn);
 		}
 		
 		return $dbo;
@@ -80,7 +84,7 @@ class storage
 		
 		ex:	mysql://username:password@host/db
 	**/
-	public function connect( $url ) {}
+	public function connect( $url) {}
 	/**
 	Issue an SQL statement
 		@param $sql string
@@ -88,7 +92,7 @@ class storage
 		@param $limit integer
 		@public
 	**/
-	public function query( $sql, $offset=0, $limit=0 ) {}
+	public function query( $sql, $offset=0, $limit=0) {}
 	/**
 	Fetch resultset as an object
 		@public
@@ -99,7 +103,7 @@ class storage
 		@param $key string
 		@public
 	**/
-	public function fetch_object_list( $key='' ) {}
+	public function fetch_object_list( $key='') {}
 	/**
 	Fetch resultset as an array
 		@public
@@ -115,13 +119,13 @@ class storage
 		@param $row integer
 		@public
 	**/
-	public function result( $row=0 ) {}
+	public function result( $row=0) {}
 	/**
 	Return an individual result field from the last query as an array
 		@param $index integer
 		@public
 	**/
-	public function result_array( $index=0 ) {}
+	public function result_array( $index=0) {}
 	/**
 	Get last insert id
 		@public
@@ -132,7 +136,7 @@ class storage
 		@param $table_name string
 		@public
 	**/
-	public function get_table_columns( $table_name ) {}
+	public function get_table_columns( $table_name) {}
 	/**
 	Get last query statement
 		@public
@@ -143,7 +147,7 @@ class storage
 		@param $table_name string
 		@public
 	**/
-	public function table_exists( $table_name ) {}
+	public function table_exists( $table_name) {}
 	/**
 	Get last query error
 		@public
@@ -159,13 +163,22 @@ class storage
 		@param $text string
 		@public
 	**/
-	public function getEscaped( $text ) {}
+	public function getEscaped( $text) {}
 	/**
 	Get current database date
 		@param $unix_ts boolean
 		@public
 	**/
-	public function curdate( $unix_ts=false ) {}
+	public function curdate( $unix_ts=false) {}
+	
+	/**
+	* Get connection status
+		@public
+	*/
+	function isConnected()
+	{
+		return $this->_connected;
+	}
 	
 	/**
 	* Get a quoted database escaped string
@@ -201,6 +214,36 @@ class storage
 	}
 
 	/**
+	Get storage adapters
+		@public
+	**/
+	function getAdapters()
+	{
+		$adapters		= array();
+		
+		$plugin_path	= PATH_CLASSES .DS. 'storage'; 
+		$files			= Files::getFolderFiles($plugin_path, 'php');
+		if (($files === false) || count($files) < 1 ) return false;
+		
+		foreach($files as $i=>$file) {
+			$filePath	= $plugin_path .DS. $file;
+			// get file info
+			$path_info	= pathinfo($filePath);
+			
+			// file.xxx.php is skipped
+			// look for real adapter
+			if (strpos($path_info['filename'], '.') === false) {
+				$adapters[]	= $path_info['filename'];
+			}
+			
+			// sort
+			sort($adapters);
+		} // foreach
+		
+		return $adapters;
+	}
+	
+	/**
 	Add row into table
 		@param $table_name string
 		@param $row object
@@ -216,9 +259,10 @@ class storage
 		
 		$data	= array();
 		foreach (get_object_vars($row) as $k=>$v) {
-			if ($v === null) {
+			if (empty($v)) {
 				continue;
 			}
+			
 			if (is_array($v) || is_object($v)) {
 				// convert to readable data
 				if ($convert_array_to_string) {
@@ -310,7 +354,12 @@ class storage
 		foreach (get_object_vars($row) as $k=>$v) {
 			if (isset($array[$k])) {
 				// always check slashes
-				$row->{$k}	= (get_magic_quotes_gpc()) ? stripslashes($array[$k]) : $array[$k];
+				if (is_string($array[$k])) {
+					$row->{$k}	= get_magic_quotes_gpc() ? stripslashes($array[$k]) : $array[$k];
+				}
+				else {
+					$row->{$k}	= $array[$k];
+				}
 			}
 		}
 

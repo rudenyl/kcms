@@ -24,18 +24,23 @@ final class Files
 	**/
 	static public function getDirectoryFolders( $path='' )
 	{
-		if( !is_dir($path) ) return false;
+		if (!is_dir($path)) {
+			return false;
+		}
 		
 		$dir 	= dir($path);
 		
 		$folders	= array();
-		while(false !== ($file = $dir->read())) {
-			if( is_dir($path .DS. $file) ) {
-				if( ($file == '.') || ($file == '..') ) continue;
+		while (false !== ($file = $dir->read())) {
+			if (is_dir($path .DS. $file)) {
+				if (($file == '.') || ($file == '..')) {
+					continue;
+				}
 				
 				$folders[]	= $file;
 			}
 		}
+		
 		$dir->close();
 		
 		return $folders;
@@ -47,9 +52,11 @@ final class Files
 		@param $filter string
 		@public
 	**/
-	static public function getFolderFiles( $path='', $filter='.' )
+	static public function getFolderFiles( $path='', $filter='.', $recursive=false )
 	{
-		if (!is_dir($path)) return false;
+		if (!is_dir($path)) {
+			return false;
+		}
 		
 		// get filters
 		$filters	= explode(',', $filter);
@@ -69,6 +76,18 @@ final class Files
 				// add to list
 				$files[]	= $file;
 			}
+			else if (is_dir($path .DS. $file) && $recursive) {
+				if (($file == '.') || ($file == '..')) {
+					continue;
+				}
+				
+				$sub_files	= self::getFolderFiles($path .DS. $file, $filter, $recursive);
+				if ($sub_files) {
+					foreach ($sub_files as $sub_file) {
+						$files[]	= $file .DS. $sub_file;
+					}
+				}
+			}
 		}
 		
 		// close directory
@@ -82,38 +101,121 @@ final class Files
 		@param $filename string
 		@public
 	**/
-	function getFileMimeType( $filename ) 
+	function getFileMimeType( $filename, $use_extension=false ) 
 	{
-		if (function_exists('finfo_file')) {
-			$finfo	= finfo_open(FILEINFO_MIME_TYPE);
-			$type	= @finfo_file($finfo, $filename);
-			finfo_close($finfo);
-		} 
+		if ($use_extension) {
+			// get file info
+			$finfo			= pathinfo($filename);
+			$type			= $finfo['extension'];
+
+			// get media types
+			$media_types	= self::getMediaTypes();
+			$type			= isset($media_types['.' . $type]) ? $media_types['.' . $type] : $type;
+		}
 		else {
-			//require_once 'upgradephp/ext/mime.php';
-			//$type	= mime_content_type($filename);
-			return false;
-		}
+			// get media types
+			$media_types	= self::getMediaTypes('type');
 
-		if (!$type || in_array($type, array('application/octet-stream', 'text/plain'))) {
-			$secondOpinion	= exec('file -b --mime-type ' . escapeshellarg($filename), $foo, $returnCode);	// Yeah, truly second opinion (use with caution)
-			
-			if ($returnCode === 0 && $secondOpinion) {
-				$type	= $secondOpinion;
+			$type			= null;
+			if (function_exists('finfo_file')) {
+				$finfo	= finfo_open(FILEINFO_MIME_TYPE);
+				$type	= @finfo_file($finfo, $filename);
+				finfo_close($finfo);
+			} 
+			else if (function_exists('mime_content_type')) {
+				$type	= mime_content_type($filename);
 			}
-		}
 
-		if (!$type || in_array($type, array('application/octet-stream', 'text/plain'))) {
-			//require_once 'upgradephp/ext/mime.php';
-			//$exifImageType	= exif_imagetype($filename);
-			//if ($exifImageType !== false) {
-			//	$type	= image_type_to_mime_type($exifImageType);
-			//}
-			return false;
+			$type	= isset($media_types[$type]) ? $media_types[$type] : $type;
 		}
 
 		return $type;
 	}	
+	
+	/** Get list of media types
+		@list-ref: http://www.freeformatter.com/mime-types-list.html
+		@param $key string
+		@param $display string
+		@public
+
+		// display option
+		name - type name
+		type - media type (ie. text/html)
+		ext - extension
+		detail - more details
+	**/
+	function getMediaTypes( $key='ext', $display=null ) 
+	{
+		static $list;
+
+		if (!$list) {
+			$list	= array();
+			
+			$mime_type_fp	= PATH_CLASSES .DS. '3rdparty' .DS. 'data.mime_types.php';
+			if (is_file($mime_type_fp)) {
+				$display_options	= array('name','type','ext','detail');
+				if (!in_array($key, $display_options)) {
+					$key	= 'ext';
+				}
+				$display	= in_array($display, $display_options) ? $display : null;
+
+				// load to array
+				$fp_lines	= file($mime_type_fp);
+
+				if ($fp_lines) {
+					foreach ($fp_lines as $line) {
+						@list($name, $type, $ext, $detail)	= explode('***', $line);
+
+						$fkey		= "${$key}";
+						
+						if ($display) {
+							$fdisplay		= "${$display}";
+							$list[$fkey]	= $fdisplay;
+						}
+						else {
+							// create data ref
+							$list[$fkey]	= array(
+								'type' => $type,
+								'ext' => $ext,
+								'name' => $name,
+								'detail' => $detail
+							);
+						}
+					} // foreach
+				}
+			}
+		}
+
+		return $list;
+	}	
+	
+	/**
+	Delete a folder an all existing files under
+		@param $path string
+		@public
+	**/
+	static public function deleteFolder( $path ) 
+	{
+		if (!is_dir($path)) {
+			return;
+		}
+		
+		if (substr($path, strlen($path) - 1, 1) != '/') {
+			$path	.= '/';
+		}
+		
+		$files	= glob($path . '*', GLOB_MARK);
+		foreach ($files as $file) {
+			if (is_dir($file)) {
+				self::deleteFolder($file);
+			} 
+			else {
+				@unlink($file);
+			}
+		}
+		
+		@rmdir($path);
+	}
 	
 	/**
 	Download a file

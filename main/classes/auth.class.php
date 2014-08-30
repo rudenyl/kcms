@@ -79,7 +79,9 @@ final class Auth
 		$_COOKIE[$session_key]	= array();
 		
 		setcookie($session_key, '', time() - 3600, '/');
-		setcookie(session_name(), session_id(), 1, '/');
+		/**/
+		// Dhens, 02072013
+		//setcookie(session_name(), session_id(), 1, '/');
 		
 		// close session
 		@session_destroy();
@@ -136,6 +138,16 @@ final class Auth
 
 		return false;
 	}
+	
+	/**
+	_impersonate alias > backward compatibility
+		@param $user_to_impersonate int
+		@private
+	**/
+	public function impersonate( $user_to_impersonate )
+	{
+		return $this->_impersonate( $user_to_impersonate );
+	}
 
 	/**
 	Determine if user is logged in
@@ -188,27 +200,30 @@ final class Auth
 		$__config		= $this->__app->get('config');
 		$session_key	= md5($__config->salt);
 		
+		$success	= false;
 		if (isset($__config->session_type) && ($__config->session_type == 'session')) {
 			@session_start();
 			
 			if (isset($_SESSION[$session_key]['__auth']) ) {
 				@list($username, $password)	= explode('.', $_SESSION[$session_key]['__auth']);
-				return $this->_attemptLogin($username, $password);
+				$success	= $this->_attemptLogin($username, $password);
 			}
 		}
-		else {
+		
+		if (!$success) {
 			// attempt from saved cookie
 			if (isset($_COOKIE[$session_key]) && is_string($_COOKIE[$session_key])) {
-				$cookie = json_decode($_COOKIE[$session_key], true);
-
+				$auth_cookie	= stripslashes($_COOKIE[$session_key]);	// fix for problem with some platforms
+				$cookie = json_decode($auth_cookie, true);
+				
 				if (isset($cookie['__auth'])) {
-					@list($username, $password)	= explode('.', $_SESSION[$session_key]['__auth']);
-					return $this->_attemptLogin($username, $password);
+					@list($username, $password)	= explode('.', $cookie['__auth']);
+					$success	= $this->_attemptLogin($username, $password);
 				}
 			}
 		}
 
-		return false;
+		return $success;
 	}
 
 	/**
@@ -282,7 +297,7 @@ final class Auth
 		$cookie		= json_encode(array('__auth' => $auth_key));
 		
 		// get session lifetime (minutes)
-		$session_time	= isset($__config->session_time) ? $__config->session_time : 1;
+		$session_time	= isset($__config->session_maxlife) ? $__config->session_maxlife : 1;
 		$session_time	= (int)$session_time ? $session_time : 1;
 		
 		return setcookie($session_key, $cookie, time() + 60 * $session_time, '/');
@@ -310,7 +325,8 @@ final class Auth
 		else {
 			// attempt from saved cookie
 			if (isset($_COOKIE[$session_key]) && is_string($_COOKIE[$session_key])) {
-				$cookie = json_decode($_COOKIE[$session_key], true);
+				$auth_cookie	= stripslashes($_COOKIE[$session_key]);	// fix for problem with some platforms
+				$cookie = json_decode($auth_cookie, true);
 
 				if (isset($cookie['__auth'])) {
 					return (($cookie['__auth'] == $auth_key));

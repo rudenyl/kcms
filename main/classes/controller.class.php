@@ -22,14 +22,14 @@ class Controller
 	function __construct( $appName='' )
 	{
 		// get controller name
-		if ( preg_match( '/Controller(.*)/i', get_class($this), $match) ) {
+		if ( preg_match( '/Controller(.*)/i', get_class($this), $match)) {
 			$this->_name	= strtolower( $match[1] );
 		}
 		
 		// set application name
 		$this->_appName		= $appName;
 		
-		if( empty($this->_appName) ) {
+		if (empty($this->_appName)) {
 			$this->_appName		= Request::getVar('app', 'default');
 		}
 		
@@ -60,12 +60,12 @@ class Controller
 		$value	= null;
 
 		$sig	= md5( $this->_name.$this->_appName );
-		if( isset(self::$_data[$sig][$key]) ) {
+		if (isset(self::$_data[$sig][$key])) {
 			$value	= self::$_data[$sig][$key];
 		}
 		
 		// set default value
-		if( empty($value) && $default_value ) {
+		if (empty($value) && $default_value) {
 			$value	= $default_value;
 		}
 		
@@ -83,13 +83,13 @@ class Controller
 		
 		$task	= empty($task) ? 'display' : $task;
 		
-		if( !in_array($task, $not_allowed) ) {
+		if (!in_array($task, $not_allowed)) {
 			// parse dot notation
 			$params	= explode('.', $task);
 			$task	= array_shift($params);
 			
 			// check if method exists
-			if ( method_exists($this, $task) && $task <> 'display' ) {
+			if (method_exists($this, $task) && $task <> 'display') {
 				// execute task
 				$this->$task( $params );
 			}
@@ -112,7 +112,7 @@ class Controller
 		$modelPath	= PATH_APPLICATIONS .DS. $this->_appName .DS. 'models' .DS. $model_name.'.php';
 		
 		// load model
-		if( file_exists($modelPath) && is_file($modelPath) ) {
+		if (file_exists($modelPath) && is_file($modelPath)) {
 			require_once( $modelPath );
 			
 			$modelClassName	= ucfirst($this->_appName) .'Model'. ucfirst($model_name);
@@ -140,6 +140,15 @@ class Controller
 	}
 
 	/**
+	Get view name
+		@public
+	**/
+	public function getName()
+	{
+		return $this->_name;
+	}
+
+	/**
 	Get controller view
 		@return object
 		@public
@@ -151,7 +160,7 @@ class Controller
 		$viewPath	= PATH_APPLICATIONS .DS. $this->_appName .DS. 'views' .DS. $this->_name .DS. 'index.php';
 		
 		// load view
-		if( file_exists($viewPath) && is_file($viewPath) ) {
+		if (file_exists($viewPath) && is_file($viewPath)) {
 			require_once( $viewPath );
 			
 			$viewName	= ucfirst($this->_appName) .'View'. ucfirst($this->_name);
@@ -187,14 +196,14 @@ class Controller
 	public function display( $layout=null )
 	{
 		// get view layout
-		if( $layout === null ) {
+		if ($layout === null) {
 			$layout	= $this->get('layout', Request::getVar('layout', 'default'));
 		}
 
 		// get controller view
 		$view	=& $this->getView();
 		
-		if( $view ) {
+		if ($view) {
 			// Set the layout
 			$view->setLayout($layout);
 			
@@ -217,7 +226,7 @@ class Controller
 		
 		// get files
 		$files			= Files::getFolderFiles($plugin_path, 'php');
-		if( ($files === false) || count($files) < 1 ) return false;
+		if (($files === false) || count($files) < 1 ) return false;
 		
 		foreach($files as $i=>$file) {
 			$filePath	= $plugin_path .DS. $file;
@@ -226,13 +235,13 @@ class Controller
 			
 			$classname	= ucfirst($this->_appName). 'Plugin'. ucfirst($path_info['filename']);
 			
-			if( !class_exists($classname, false) ) {
+			if (!class_exists($classname, false)) {
 				require_once( $filePath );
 				
 				$class_obj	= new $classname;
 				
 				// is an Plugins sub-class?
-				if( is_subclass_of($class_obj, 'Plugin') ) {
+				if (is_subclass_of($class_obj, 'Plugin')) {
 					// get index
 					// TODO: remove tagging if plugin is db-based
 					$index		= (isset($class_obj->index) && (int)$class_obj->index ? $class_obj->index : 9999+$i);

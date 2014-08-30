@@ -35,7 +35,7 @@ final class Pagination
 		$this->_limit		= $limit;
 		$this->_limitstart	= ($this->_curpage > 1) ? ($this->_curpage * $limit) - $limit : 0;
 		
-		if( $this->_limit ) {
+		if ($this->_limit) {
 			$this->_num_pages	= ($this->_total > $this->_limit) ? ceil($this->_total / $this->_limit) : 0;
 		}
 		$this->_single_page	= $this->_num_pages < 1;
@@ -45,7 +45,7 @@ final class Pagination
 		
 		// set base URL if don't exists
 		$this->_baseURL		= $baseURL;
-		if( empty($baseURL) ) {
+		if (empty($baseURL)) {
 			$config			=& Factory::getConfig();
 			$uri			= URL::getURI();
 			
@@ -76,8 +76,15 @@ final class Pagination
 		@param $limit int
 		@public
 	**/
-	function getNumPages( $total, $limit )
+	function getNumPages( $total=null, $limit=null )
 	{
+		if ($total === null) {
+			$total	= $this->_total;
+		}
+		if ($limit === null) {
+			$limit	= $this->_limit;
+		}
+		
 		if ($total && $limit) {
 			return ($total > $limit) ? ceil($total / $limit) : 0;
 		}
@@ -114,10 +121,10 @@ final class Pagination
 		
 		if ($this->_limit > 0) {
 			// create pages	
-			if ( $this->_total > $this->_limit ) {
+			if ($this->_total > $this->_limit) {
 				$html	= "<ul class=\"pagination\">\n";
 			
-				if (1 < $this->_curpage ) {
+				if (1 < $this->_curpage) {
 					$page	= ($this->_curpage-1 == 1 ? 1 : $this->_curpage - 1);
 					$link	= $this->_baseURL .($is_SEFlike ? '?' : '&amp;'). '_PN='.$page;
 					$link	= ($this->_automakeSEF ? URL::_($link) : $link);
@@ -150,7 +157,7 @@ final class Pagination
 					} // for
 				}
 				
-				if ( $this->_curpage * $this->_limit < $this->_total || -1 == $this->_total ) {
+				if ($this->_curpage * $this->_limit < $this->_total || -1 == $this->_total) {
 					$page	= $this->_curpage + 1;
 					$link	= $this->_baseURL .($is_SEFlike ? '?' : '&amp;'). '_PN='.$page;
 					$link	= ($this->_automakeSEF ? URL::_($link) : $link);
@@ -166,6 +173,32 @@ final class Pagination
 			}
 		}
 	}
+
+	/**
+	Get pagination stats
+		@public
+	*/
+	function getStats()
+	{
+		$stats	= new stdclass;
+
+		$stats->total	= $this->_total;
+		$stats->single_page	= $this->_single_page;
+
+		if (!$this->_single_page) {
+			// pages
+			$stats->pages	= new stdclass;
+			$stats->pages->current	= $this->_curpage;
+			$stats->pages->total	= $this->_num_pages;
+
+			// range
+			$stats->range	= new stdclass;
+			$stats->range->start	= $this->_limit * ($this->_curpage - 1) + 1;
+			$stats->range->end		= $stats->range->start + $this->_num_results - 1;
+		}
+
+		return $stats;
+	}
 	
 	/**
 	Display pagination counter
@@ -174,19 +207,20 @@ final class Pagination
 	**/
 	function showCounter( $display_range=false )
 	{
-		if( $this->_single_page ) {
+		if ($this->_single_page) {
 			echo $this->_total;
-		} else {
-			if( $this->_curpage > $this->_total ) {
+		} 
+		else {
+			if ($this->_curpage > $this->_total) {
 				return;	// Page out of range.
 			}
 			else {
-				if( $display_range ) {
+				if ($display_range) {
 					$index	= $this->_limit * ($this->_curpage - 1) + 1;
-					echo $index .' - '. ($index + $this->_num_results - 1)  .' of ' . $this->_total;
+					echo number_format($index,0) .' - '. number_format($index + $this->_num_results - 1,0)  .' of ' . number_format($this->_total,0);
 				}
 				else {
-					echo 'page '. $this->_curpage  .' of '. $this->_num_pages;
+					echo 'page '. number_format($this->_curpage,0)  .' of '. number_format($this->_num_pages,0);
 				}
 			}
 		}

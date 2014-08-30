@@ -108,28 +108,32 @@ class Plugin
 	{
 		$argv =& func_get_args();
 		
-		if( count($argv) < 1 ) return;
+		if (count($argv) < 1) return;
 		
 		$method	= $argv[0];
 		array_shift($argv);
+		
+		$result	= array();
 
 		// iterate through plugins
-		foreach($this->_items as $plugin) {
+		foreach ($this->_items as $plugin) {
 			$classname	= get_class($plugin);
 			
-			if( is_callable( array($classname, $method) ) ) {
+			if (method_exists($plugin, $method)) {
 				$args		= array();
 				
 				$args[]	=& $this->getModel();
 				$args[]	=& $this->getView();
 				
 				// add args
-				for($i=0, $n=count($argv); $i<$n; $i++) {
-					$args[]	= $argv[$i];
+				for ($i=0, $n=count($argv); $i<$n; $i++) {
+					$args[]	=& $argv[$i];
 				}
 				
-				call_user_func_array( array($classname, $method), $args );
+				$result[]	= call_user_func_array( array($classname, $method), $args );
 			}
 		}
+		
+		return $result;
 	}
 }

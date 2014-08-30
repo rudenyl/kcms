@@ -20,6 +20,13 @@ final class Application
 		// set global session identification
 		$config	=& Factory::getConfig();
 		
+		// init session vars
+		if (isset($config->session_maxlife)) {
+			ini_set('session.gc_maxlifetime', $config->session_maxlife * 60);
+		}
+		ini_set('session.gc_probability', 1);
+		ini_set('session.gc_divisor', 1);
+
 		switch (@$config->session_type) {
 			case 'db':
 				$sess_db	= new SessionDBHandler();
@@ -27,7 +34,7 @@ final class Application
 				break;
 		}
 		
-		session_start();
+		@session_start();
 		self::$global['SESSION_ID']	= session_id();
 		
 		// init content buffer
@@ -119,38 +126,87 @@ final class Application
 		@public
 		@param $text string
 	**/
-	static function setNotification( $text='', $id='success' )
+	static function setNotification( $text )
 	{
-		@session_start();
-		
-		if (empty($id)) {
-			$id	= 'success';
-		}
-		$_SESSION[$id]['_app-notification']	= $text;
+		self::__message($text);
 	}
 	
 	/**
 	Get application-wide notification
 		@public
 	**/
-	static function getNotification( $id='success' )
+	static function getNotification()
 	{
-		@session_start();
+		self::__message('GET');
+	}
+	
+	/**
+	Set application-wide error notification
+		@public
+		@param $text string
+	**/
+	static function setError( $text )
+	{
+		self::__message($text, '__error');
+	}
+	
+	/**
+	Get application-wide error notification
+		@public
+	**/
+	static function getError()
+	{
+		self::__message('GET', '__error');
+	}
+	
+	/**
+	Set application-wide alert notification
+		@public
+		@param $text string
+	**/
+	static function setWarning( $text )
+	{
+		self::__message($text, '__warning');
+	}
+	
+	/**
+	Get application-wide alert notification
+		@public
+	**/
+	static function getWarning()
+	{
+		self::__message('GET', 'warning');
+	}
+	
+	/**
+	Render html display application-wide notifications
+		@public
+	**/
+	static function showAlerts( $render=true )
+	{
+		$alert_tokens	= array(
+			'info',
+			'error',
+			'warning'
+		);
+		$msg_tpl	= "<div class=\"notification notify-%s\">\n\t%s\n</div>";
 		
-		if (empty($id)) {
-			$id	= 'success';
-		}
-		if (isset($_SESSION[$id]['_app-notification'])) {
-			$notification	= $_SESSION[$id]['_app-notification'];
+		$msgs	= array();
+		foreach ($alert_tokens as $token) {
+			$text		= self::__message('GET', '__' . $token);
 			
-			// clear on last fetch
-			$_SESSION[$id]['_app-notification']	= null;
-			unset($_SESSION[$id]['_app-notification']);
-			
-			return $notification;
+			if (!empty($text)) {
+				$msgs[]	= sprintf($msg_tpl, $token, $text);
+			}
 		}
 		
-		return null;
+		$html	= implode("\n", $msgs);
+		if ($render) {
+			echo $html;
+		}
+		else {
+			return $html;
+		}
 	}
 	
 	/**
@@ -176,6 +232,47 @@ final class Application
 		}
 		
 		return $session_id;
+	}
+	
+	/**
+	Set application-wide messaging (setter/getter)
+		@public
+		@param $text string
+	**/
+	private function __message( $token='', $id=null )
+	{
+		$config	=& Factory::getConfig();
+		
+		@session_start();
+		
+		if (empty($id)) {
+			$id	= '__info';
+		}
+		
+		// additional hash helper strings
+		$app	= Request::getVar('app');
+		$view	= Request::getVar('view');
+		
+		$id	.= '.' . md5($config->salt . $config->template . $app . $view);
+		
+		if ($token === 'GET') {
+			// getter
+			if (isset($_SESSION[$id]['_app-notification'])) {
+				$notification	= $_SESSION[$id]['_app-notification'];
+				
+				// clear on last fetch
+				$_SESSION[$id]['_app-notification']	= null;
+				unset($_SESSION[$id]['_app-notification']);
+				
+				return $notification;
+			}
+			
+			return null;
+		}
+		else {
+			// setter
+			$_SESSION[$id]['_app-notification']	= $token;
+		}
 	}
 	
 	/**
@@ -276,7 +373,7 @@ final class Application
 	private function _loadModules()
 	{
 		// extract module tag
-		preg_match_all('|<site:modules\[(.*)\]\/>|', self::$global['RESPONSE'], $matches);
+		preg_match_all('|<site:modules\[(.*?)\]\/>|', self::$global['RESPONSE'], $matches);
 		
 		// load module files
 		if (isset($matches[1]) && count($matches[1]) > 0) {
@@ -291,25 +388,29 @@ final class Application
 						if (!empty($mparams)) {
 							$module	= str_replace($mparams[0], '', $module);
 							
-							$mparams	= json_decode( $mparams[0] );
+							$mparams	= json_decode($mparams[0]);
 						}
 					
 						// get from storage
 						$list	= ModuleHelper::_('position', $module);
 						if ($list) {
 							foreach ($list as $module_item) {
-								if ($module_item->name == 'custom') {
-									$html	.= ModuleHelper::render($module_item);
-								}
-								else {
+								$is_custom	= $module_item->name == 'custom';
+								if (!$is_custom) {
 									$module_item->params	= new Parameter($module_item->params);
-									$html	.= $this->_loadModule($module_item->name, $module_item->params);
 								}
+								
+								$html	.= ModuleHelper::render($module_item, $is_custom);
 							}
 						}
 						else {
 							// file-based
-							$html	.= $this->_loadModule($module, null, $mparams);
+							$module_item	= array(
+								'name' => $module,
+								'params' => $mparams
+							);
+							
+							$html	.= ModuleHelper::render((object)$module_item, false);
 						}
 					}
 				}
@@ -318,27 +419,6 @@ final class Application
 				self::$global['RESPONSE']	= str_replace('<site:modules['.$mtxt.']/>', $html, self::$global['RESPONSE']);
 			} // foreach
 		}
-	}
-	/**
-	Load application module item
-		@private
-	**/
-	private function _loadModule( $module_name, $params=null, $module=null )
-	{
-		$modulePath	= PATH_MODULES .DS. $module_name .DS. $module_name .'.php';
-		
-		if (file_exists($modulePath) && is_file($modulePath)) {
-			ob_start();
-			
-			// load module
-			include( $modulePath );
-			
-			$html	= ob_get_clean();
-			
-			return $html;
-		}
-		
-		return null;
 	}
 	
 	/**
@@ -352,7 +432,8 @@ final class Application
 		// default meta tags
 		$this->set('meta', array(
 				'<meta name="robots" content="index, follow" />',
-				'<meta http-equiv="content-type" content="text/html; charset=utf-8" />'
+				'<meta http-equiv="content-type" content="text/html; charset=utf-8" />',
+				'<meta http-equiv="encoding" content="utf-8" />'
 			), true
 		);
 		
@@ -481,7 +562,7 @@ final class Application
 			// load modules
 			$this->_loadModules();
 		}
-			
+		
 		// get script declarations
 		$this->_parseScriptDeclarations();
 		
@@ -572,10 +653,14 @@ final class Application
 				return $default;
 			';
 			
-			self::$global['RESPONSE']	= preg_replace_callback('|<script[^>]*>(.*)<\/script>|sU', 
+			$callback_response	= preg_replace_callback('|<script[^>]*>(.*)<\/script>|sU', 
 				create_function('$matches', $callback_func), 
 				self::$global['RESPONSE']
 			);
+			
+			if (!empty($callback_response)) {
+				self::$global['RESPONSE']	= $callback_response;
+			}
 		}
 		
 		// compress

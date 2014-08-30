@@ -31,7 +31,7 @@ final class Mailer
 	{
 		$headers	= array();
 		
-		if( $html ) {
+		if ($html) {
 			// To send HTML mail, the Content-type header must be set
 			$headers[]	= 'MIME-Version: 1.0';
 			$headers[]	= 'Content-type: text/html; charset=utf-8';
@@ -44,15 +44,15 @@ final class Mailer
 		/*
 		// parse recipient email
 		$to_email	= $to;
-		if( preg_match('/"(.*?)" <(.*?)>/siU', $to, $match) ) {
-			if( isset($match[2]) ) {
+		if (preg_match('/"(.*?)" <(.*?)>/siU', $to, $match)) {
+			if (isset($match[2])) {
 				$to_email	= $match[2];
 			}
 		}
 		// parse sender email
 		$from_email	= $from;
-		if( preg_match('/"(.*?)" <(.*?)>/siU', $from, $match) ) {
-			if( isset($match[2]) ) {
+		if (preg_match('/"(.*?)" <(.*?)>/siU', $from, $match)) {
+			if (isset($match[2])) {
 				$from_email	= $match[2];
 			}
 		}
@@ -65,11 +65,18 @@ final class Mailer
 		$headers	= str_replace('<recipient/>', $to, $headers);
 		
 		// decode 
-		if( $coded_message ) {
+		if ($coded_message) {
 			$message	= base64_decode($message);
 		}
 		
-		return @mail($to, $subject, $message, $headers);
+		try {
+			mail($to, $subject, $message, $headers);
+			
+			return true;
+		}
+		catch (Exception $err) {}
+		
+		return false;
 	}
 	
 	/**
@@ -81,13 +88,13 @@ final class Mailer
 		@param $attachment mixed
 		@public
 	**/
-	function PHPMailer( $sender, $recipient, $subject, $message, $attachment=null )
+	function PHPMailer( $sender, $recipient, $subject, $message, $html=true, $attachment=null )
 	{
 		include_once( dirname(__FILE__) .DS. '3rdparty' .DS. 'class.phpmailer.php' );
 		
 		$mail	= new PHPMailer();
 		
-		$mail->IsHTML(true);
+		$mail->IsHTML($html);
 		$mail->AddAddress($recipient);
 		
 		// get recipient
@@ -96,14 +103,23 @@ final class Mailer
 			$mail->SetFrom($email, $name);
 		}
 		
-		if( $attachment ) {
+		if ($attachment) {
 			$mail->AddAttachment($attachment);
 		}
 		
 		$mail->Subject	= $subject;
 		$mail->Body		= $message;
 		
-		@$mail->Send(); // send message
+		try {
+			ob_start();
+			@$mail->Send(); // send message
+			$error	= ob_get_clean();
+			
+			return true;
+		}
+		catch (Exception $err) {}
+		
+		return false;
 	}
 	
 	/**

@@ -268,7 +268,7 @@ class Model
 		@param $row object
 		@public
 	**/
-	public function store( $row=null ) 
+	public function store( $row=null, $auto=true ) 
 	{
 		// get vars
 		if ($row === null || !is_object($row)) {
@@ -277,9 +277,10 @@ class Model
 		
 		$__kv		= $row->{$this->__tbl_key};
 
-		if( $__kv ) {
+		if ($__kv && $auto) {
 			$result = $this->_db->update_row($this->__tbl_name, $row, $this->__tbl_key);
-		} else {
+		} 
+		else {
 			$result = $this->_db->add_row($this->__tbl_name, $row, $this->__tbl_key);
 		}
 

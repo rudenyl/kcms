@@ -71,7 +71,10 @@ class FileLogging extends Logging_Abstract
 			'{date}' => $date,
 			'{log_message}' => $msg
 		);
+		
 		$data	= str_replace(array_keys($format_replacements), array_values($format_replacements), $this->__logFormat);
+		$data	.= "\n";
+		
 		if (fwrite($fp, $data) === false) {
 			throw new Exception('Could not write to cache.');
 		}
@@ -107,7 +110,7 @@ class FileLogging extends Logging_Abstract
 			
 			foreach ($base_paths as $base_path) {
 				// create log path
-				$log_filename	= date('Ymd') .'.txt';
+				$log_filename	= 'log_' . date('Ymd') .'.txt';
 				$folder_name	= ($this->_unique_id ? '$'.md5($this->_unique_id) : false);
 				$file_path		= $base_path .DS. ($folder_name ? $folder_name .DS : '') . $log_filename;
 				

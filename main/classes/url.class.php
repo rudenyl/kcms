@@ -22,31 +22,69 @@ final class URL
 		@param $url string
 		@param $params string
 		@param $force_ssl boolean
+		@param $always_frontend boolean
 	**/
-	static public function _( $url, $params=null, $force_ssl=false )
+	static public function _( $url, $params=null, $force_ssl=false, $always_frontend=null )
 	{
-		$__app	=& Factory::getApplication();
+		$__app	= Factory::getApplication();
 		$config	= $__app->get('config');
 		
 		$url	= str_replace('&amp;', '&', $url);
+
+		// set base URL
+		$base_app_path	= PATH_APPLICATIONS;
+		$base_url_path	= $config->baseURL;
+		// always parse with frontend applications
+		if ($always_frontend === true) {
+			$admin_path		= str_replace('/', DS, $config->admin_path);
+			$base_app_path	= str_replace($admin_path, '', PATH_APPLICATIONS);
+			$base_url_path	= str_replace($config->admin_path, '', $config->baseURL);
+		}
 		
 		if ($config->SEFURL) {
+			// Get current language
+			$lang_code	= I18N::getCurrentLanguage();
+			
+			// url prefix
+			$lang_prefix	= '';
+			
+			// Add language
+			if ($lang_code && @$config->SEFURL_lang_prefix) {
+				// add to route
+				$lang_prefix	= $lang_code . '/';
+			}
+		
+			$segment	= array();
+			
 			// create param link
 			$params	= empty($params) ? '' : ($params{0} != '#' ? '?' : '') . $params;
 		
+			// parse url
 			$uri_vars	= parse_url($url);
 			
-			if (isset($uri_vars['path']) && $uri_vars['path'] == 'index.php') {
-				$url	= $config->baseURL . $url;
-			}
+			// parse uri query
+			parse_str(@$uri_vars['query'], $queries);
+			if ($queries) {
+				$segment	= array_merge($segment, $queries);
 			
-			$query		= isset($uri_vars['query']) ? $uri_vars['query'] : '';
-			$qparams	= explode('&', $query);
-		
-			$segment	= array();
-			for($i=0, $n=count($qparams); $i<$n; $i++) {
-				@list($k, $v)	= explode("=", $qparams[$i]);
-				$segment[$k]	= $v;
+				$required	= array(
+					'app',
+					'view',
+					'task',
+					'id',
+					'menu_id',
+					'_PN'
+				);
+				foreach ($queries as $qk=>$qv) {
+					if (in_array($qk, $required)) {
+						unset($queries[$qk]);
+					}						
+				}
+				
+				// attach to params
+				if ($queries) {
+					$params	.= (empty($params) ? '?' : '&') . http_build_query($queries);
+				}
 			}
 			
 			// build
@@ -57,7 +95,7 @@ final class URL
 				$save_url	= false;
 				
 				// get SEF implementation per app
-				if( isset($segment['app']) ) {
+				if (isset($segment['app'])) {
 					$app		= $segment['app'];
 				}
 				else {
@@ -65,8 +103,8 @@ final class URL
 				}
 				$appSEFName		= 'App' . ucfirst($app) .'SEF';
 				
-				$appSEFPath	= PATH_APPLICATIONS .DS. $app .DS. 'sef.php';
-				if( file_exists($appSEFPath) && is_file($appSEFPath) ) {
+				$appSEFPath	= $base_app_path .DS. $app .DS. 'sef.php';
+				if (file_exists($appSEFPath) && is_file($appSEFPath)) {
 					require_once( $appSEFPath );
 					
 					$appSEFName		= 'App' . ucfirst($app) .'SEF';
@@ -92,8 +130,8 @@ final class URL
 					}
 					$route[]	= isset($segment['view']) ? $segment['view'] : 'default';
 					$route[]	= isset($segment['task']) ? $segment['task'] : '';
-					if( isset($segment['id']) ) {
-						if( strpos($segment['id'], ':') !== false ) {
+					if (isset($segment['id'])) {
+						if (strpos($segment['id'], ':') !== false) {
 							list($id, $alias)	= explode(':', $segment['id']);
 							$route[]	= $id;
 							$route[]	= $alias;
@@ -105,19 +143,24 @@ final class URL
 				}
 				
 				$route		= implode('/', $route);
-				$sef_url	= $config->baseURL . $route;
+				$sef_url	= $base_url_path . $route;
 				
 				// save redirection link
 				if ($save_url) {
-					$old_url	= str_replace($config->baseURL, '', $url);
+					if (isset($uri_vars['path']) && $uri_vars['path'] == 'index.php') {
+						$url	= $base_url_path . $url;
+					}
+			
+					$old_url	= str_replace($base_url_path, '', $url);
 					if (($saved_url = self::saveRedirection($old_url, $route)) !== false) {
-						$sef_url	= $config->baseURL . $saved_url;
+						$sef_url	= $base_url_path . $lang_prefix . $saved_url;
 					}					
 				}
 				
 				$url	= $sef_url . $params;
 			}
 			else {
+				$url	= $base_url_path . $lang_prefix;
 				$url	.= $params;
 			}
 		}
@@ -125,6 +168,11 @@ final class URL
 			// create param link
 			$params	= empty($params) ? '' : ($params{0} != '#' ? (strpos($url,'?')!==false ? '&' : '?') : '') . $params;
 		
+			// add base URL
+			if (strpos($url, 'http') === false) {
+				$url	= $base_url_path . $url;
+			}
+			
 			$url	.= $params;
 		}
 		
@@ -147,32 +195,6 @@ final class URL
 	static public function buildSEFRoute( $base, $buffer )
 	{
 		return $buffer;
-		
-		// smart detection commented out - slows page loading
-		/*
-		$uri_vars	= parse_url($base);
-		$basepath	= $uri_vars['host'].$uri_vars['path'];
-		
-		$i			= strlen($basepath);
-		if( $basepath{$i - 1} != '/' ) {
-			$basepath	.= '/';
-		}
-		$basepath	.= 'index.php';
-	
-		$regex	= "#((http|https|ftp)://$basepath\?.*?[(\"\')])#i";
-		
-		$callback_func	= '
-			if( !empty($matches[1]) ) {
-				return URL::_($matches[1]);
-			}
-			
-			return $matches[1];
-		';
-		$buffer	= preg_replace_callback($regex, create_function('$matches', $callback_func), 
-			$buffer);
-		
-		return $buffer;
-		*/
 	}
 	
 	/**
@@ -193,14 +215,24 @@ final class URL
 	**/
 	static public function SEFTitle( $title, $id=null )
 	{
-		//mb_internal_encoding("utf-8");
-		
 		$title	= trim( trim(stripslashes(html_entity_decode($title))) );
 		
 		// clean-up 1st pass
-		$title	= str_replace('&', 'and', $title);
+		$specials	= array(
+			':' => '',
+			'&' => 'and',
+			'|' => 'or',
+			'"' => '',
+			"'" => '',
+			'<' => '',
+			'>' => '',
+			')' => '',
+			'(' => '',
+			',' => ''
+		);
+		$title	= str_replace(array_keys($specials), array_values($specials), $title);
 		
-		$title	= preg_replace('/[^a-zA-Z0-9_\- ]/', '', $title);
+		$title	= preg_replace('/[^a-zA-Z0-9_\- ]$/u', '', $title);
 		$title	= preg_replace( '#\$([0-9]*)#', '\\\$${1}', $title);
 		$title	= preg_replace('/\s+/', '-', $title );
 		
@@ -209,7 +241,7 @@ final class URL
 		}
 		
 		if ($id) {
-			return $id .':'. $title;
+			return $id . ($title=='-'||empty($title) ? '' : ':'. $title);
 		}
 		else {
 			return $title;
@@ -220,22 +252,27 @@ final class URL
 	Get url path
 		@public
 	**/
-	static function getURI()
+	static function getURI( $remove_lang_prefix=false )
 	{
-		$__app		=& Factory::getApplication();
+		$__app		= Factory::getApplication();
 		$config		= $__app->get('config');
 		
 		$root_path	= parse_url($config->baseURL);
 	
 		$uri		= new stdclass();
-		$uri->_raw	= 'http://' . (!empty($_SERVER['HTTPS']) || $_SERVER['SERVER_PORT'] == '443' ? 'https' : '') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+		$uri->_raw	= (!empty($_SERVER['HTTPS']) || $_SERVER['SERVER_PORT'] == '443' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 		$uri->_url	= $_SERVER['REQUEST_URI'];
 		
-		if( $root_path['path'] == '/' && @$uri->_url[0] == '/' ) {
+		if ($root_path['path'] == '/' && @$uri->_url[0] == '/') {
 			$uri->_url	= substr($uri->_url, 1);
 		}
 		else {
 			$uri->_url	= str_replace($root_path['path'], '', $uri->_url);
+		}
+
+		// remove lang prefix
+		if ($remove_lang_prefix) {
+			self::_parseLanguageOption($uri);
 		}
 		
 		return $uri;
@@ -275,7 +312,7 @@ final class URL
 	**/
 	static function redirect( $url, $use_SEF=true, $params='', $force_ssl=false )
 	{
-		if( $use_SEF ) {
+		if ($use_SEF) {
 			$url	= URL::_($url, $params);
 		}
 		
@@ -308,15 +345,38 @@ final class URL
 	**/
 	static function getRedirection( $newurl )
 	{
-		if( empty($newurl) ) {
+		if (empty($newurl)) {
 			return false;
 		}
 	
 		$db	= Factory::getDBO();
 	
-		$query	= "SELECT oldurl"
+		$query	= "SELECT `oldurl`"
 		."\n FROM {TABLE_PREFIX}_redirection"
-		."\n WHERE newurl = " . $db->Quote($newurl)
+		."\n WHERE `newurl` = " . $db->Quote($newurl)
+		."\n LIMIT 1"
+		;
+		$db->query($query);
+		
+		return $db->result();
+	}
+	
+	/**
+	Get the SEF link for the URL fragment
+		@param $url string
+		@public
+	**/
+	static function getSEF( $url )
+	{
+		if (empty($url)) {
+			return false;
+		}
+	
+		$db	= Factory::getDBO();
+	
+		$query	= "SELECT `newurl`"
+		."\n FROM {TABLE_PREFIX}_redirection"
+		."\n WHERE `oldurl` = " . $db->Quote($url)
 		."\n LIMIT 1"
 		;
 		$db->query($query);
@@ -352,15 +412,18 @@ final class URL
 			$uri	= URL::getURI();
 		}
 		
-		if( strpos($uri->_url, 'index.php?') !== false ) {
+		if (strpos($uri->_url, 'index.php?') !== false) {
 			// non-SEF
 			return $segments;
 		}
 		else {
+			// check for language settings
+			self::_parseLanguageOption($uri);
+		
 			// parse additional arguments
 			@list($uri->_url, $args)	= explode('?', $uri->_url);
 			
-			if( $uri->_url == 'index.php' ) {
+			if ($uri->_url == 'index.php') {
 				$uri->_url	= '';
 			}
 		}
@@ -372,7 +435,7 @@ final class URL
 		
 		// validate path
 		$app_path	= PATH_APPLICATIONS .DS. $app;
-		if( !is_dir($app_path) ) {
+		if (!is_dir($app_path)) {
 			$app	= Request::getVar('app', 'default');
 		}
 		
@@ -380,15 +443,15 @@ final class URL
 		$appSEFName		= 'App' . ucfirst($app) .'SEF';
 		
 		$appSEFPath		= PATH_APPLICATIONS .DS. $app .DS. 'sef.php';
-		if( file_exists($appSEFPath) && is_file($appSEFPath) ) {
+		if (file_exists($appSEFPath) && is_file($appSEFPath)) {
 			require_once( $appSEFPath );
 			
 			$appSEFName		= 'App' . ucfirst($app) .'SEF';
 			$appSEFClass	= new $appSEFName();
 			
-			if( is_subclass_of($appSEFClass, 'SEF') ) {
+			if (is_subclass_of($appSEFClass, 'SEF')) {
 				$appSEFTask		= 'ParseSEFRoute';
-				if ( method_exists($appSEFClass, $appSEFTask) ) {
+				if (method_exists($appSEFClass, $appSEFTask)) {
 					// execute task
 					$segments	= $appSEFClass->$appSEFTask($uri);
 					
@@ -398,6 +461,7 @@ final class URL
 							switch($i) {
 								case 0:
 									$segments['app']	= $r;
+									break;
 								case 1:
 									$segments['view']	= $r;
 									break;
@@ -417,7 +481,7 @@ final class URL
 			$SEF_URL_path	= (empty($SEF_URL_path{0}) || $SEF_URL_path{0} == 'index.php' ? null : $SEF_URL_path);
 			
 			// default SEF implementation
-			if( !empty($SEF_URL_path) ) {
+			if (!empty($SEF_URL_path)) {
 				$sk	= explode('|', 'app|view|task');
 			
 				foreach($SEF_URL_path as $i=>$segment_item) {
@@ -433,7 +497,7 @@ final class URL
 			$url		= self::getRedirection( @$uri->_url );
 			$uri_vars	= parse_url($url);
 			
-			if( isset($uri_vars['query']) && !empty($uri_vars['query']) ) {
+			if (isset($uri_vars['query']) && !empty($uri_vars['query'])) {
 				$qvars	= preg_split("/[\?&]+/", $uri_vars['query']);
 				
 				foreach($qvars as $qvar) {
@@ -474,7 +538,7 @@ final class URL
 		$uri->_raw	= $url;
 		$uri->_url	= $url_path['path'];
 		
-		if( $root_path['path'] == '/' && @$url[0] == '/' ) {
+		if ($root_path['path'] == '/' && @$url[0] == '/') {
 			$uri->_url	= substr($uri->_url, 1);
 		}
 		else {
@@ -485,6 +549,30 @@ final class URL
 	}
 	
 	/** 
+	Extract language code from uri
+		@param $uri object
+		@private
+	**/
+	private static function _parseLanguageOption( &$uri )
+	{
+		$elems	= explode('/', $uri->_url);
+		if ($elems) {
+			// get language packs
+			$lang_codes	= I18N::getList();
+			
+			if (in_array($elems[0], array_keys($lang_codes))) {
+				Request::setVar('language', $elems[0]);
+				// add to session
+				Request::setVar('language', $elems[0], 'SESSION');
+				
+				// omit lang code from url
+				$uri->_raw	= str_replace("/{$elems[0]}", '', $uri->_raw);
+				$uri->_url	= str_replace("{$elems[0]}/", '', $uri->_url);
+			}
+		}
+	}
+	
+	/** 
 	Save redirection uri to table
 		@param $oldurl string
 		@param $newurl string
@@ -492,7 +580,7 @@ final class URL
 	**/
 	private static function saveRedirection( $oldurl, $newurl )
 	{
-		$db		=& Factory::getDBO();
+		$db		= Factory::getDBO();
 		
 		// check if exists
 		// pass 1
@@ -521,13 +609,14 @@ final class URL
 		// pass 2
 		$query	= "SELECT count(*)"
 		."\n FROM {TABLE_PREFIX}_redirection"
-		."\n WHERE `newurl` LIKE " . $db->Quote( "{$newurl}%" )
+		//."\n WHERE `newurl` LIKE " . $db->Quote( "{$newurl}%" )
+		."\n WHERE `newurl` = " . $db->Quote($newurl)
 		;
 		$db->query($query);
 		$found	= (int)$db->result();
 		
 		// increment
-		if( $found ) {
+		if ($found) {
 			$newurl	= $newurl . "-{$found}";
 		}
 		
@@ -542,7 +631,7 @@ final class URL
 		;
 		$db->query($query);
 		
-		if( $found ) {
+		if ($found) {
 			return $newurl;
 		}
 		

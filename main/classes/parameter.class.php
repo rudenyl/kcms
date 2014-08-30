@@ -51,7 +51,7 @@ final class Parameter
 	public function get( $key, $default=null )
 	{
 		if (isset($this->_object->$key)) {
-			return ($this->_object->$key ? $this->_object->$key : $default);
+			return (isset($this->_object->{$key}) ? $this->_object->{$key} : $default);
 		}
 		else {
 			return $default;
@@ -67,7 +67,7 @@ final class Parameter
 	public function set( $key, $value=null )
 	{
 		// set object
-		$this->_object->$key	= $value;
+		$this->_object->{$key}	= $value;
 		// set array
 		$this->_array[$key]		= $value;
 		

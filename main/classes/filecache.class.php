@@ -15,11 +15,11 @@ class FileCache extends Cache_Abstract
 	Class constructor
 		@public
 	**/
-	function __construct( $ttl=1 )
+	function __construct( $ttl=null )
 	{
 		// set cache TTL
 		if ((int)$ttl < 1) {
-			$ttl	= 1;
+			$ttl	= $this->_ttl;
 		}
 		
 		$this->_ttl	= $ttl;
@@ -105,7 +105,7 @@ class FileCache extends Cache_Abstract
 	**/
 	private function _getCachedFile( $key ) 
 	{
-		$cachefile	= BASE_PATH .DS. '_cache' .DS. '_pages' .DS. md5($key);
+		$cachefile	= BASE_PATH .DS. '_cache' .DS. md5($key);
 		
 		return $cachefile;
 	}

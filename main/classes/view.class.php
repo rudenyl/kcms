@@ -14,6 +14,7 @@ class View
 	
 	protected $_model		= null;
 	protected $_template	= '';
+	protected $_custom_path	= '';
 	protected $_pluginMgr	= null;
 	protected static $_data	= array();
 
@@ -64,7 +65,7 @@ class View
 		}
 		
 		// set default value
-		if (empty($value) && $default_value) {
+		if (empty($value) && $default_value && $value !== null) {
 			$value	= $default_value;
 		}
 		
@@ -79,6 +80,16 @@ class View
 	public function setLayout( $layout )
 	{
 		$this->_template	= $layout;
+	}
+	
+	/**
+	Set custom layout path
+		@param $path string
+		@public
+	**/
+	public function setCustomLayoutPath( $path )
+	{
+		$this->_custom_path	= $path;
 	}
 	
 	/**
@@ -101,7 +112,7 @@ class View
 			$layout	= $this->_template;
 		}
 		
-		$html	= $this->loadTemplate( $layout );
+		$html	= $this->loadTemplate($layout);
 		echo $html;
 	}
 	
@@ -181,6 +192,15 @@ class View
 	}
 
 	/**
+	Get view name
+		@public
+	**/
+	public function getName()
+	{
+		return $this->_name;
+	}
+
+	/**
 	Load view template
 		@param $layout string
 		@public
@@ -192,10 +212,19 @@ class View
 		$html	= '';
 		
 		if (is_subclass_of($this, 'View')) {
-			// load from current theme
-			$tpl_path	= PATH_TEMPLATES .DS. $config->template .DS. 'html' .DS. $this->_appName .DS. $this->_name .DS. $layout.'.php';
-			if (!file_exists($tpl_path) || !is_file($tpl_path)) {
-				$tpl_path	= PATH_APPLICATIONS .DS. $this->_appName .DS. 'views' .DS. $this->_name .DS. 'tmpl' .DS. $layout.'.php';
+			$paths	= array(
+				// load from custom path
+				$this->_custom_path .DS. $layout.'.php',
+				// load from current theme
+				PATH_TEMPLATES .DS. @$config->template .DS. 'html' .DS. $this->_appName .DS. $this->_name .DS. $layout.'.php',
+				// main view
+				PATH_APPLICATIONS .DS. $this->_appName .DS. 'views' .DS. $this->_name .DS. 'tmpl' .DS. $layout.'.php'
+			);
+			
+			foreach ($paths as $tpl_path) {
+				if (is_file($tpl_path)) {
+					break;
+				}
 			}
 
 			// load layout

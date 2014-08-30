@@ -31,26 +31,14 @@ final class Image
 	{
 		$funcPrefix	= 'image';
 	
-		// do nothing
-		//if( !file_exists($file) || !is_file($file) ) return null;
-	
 		// get allowed extensions
-		if ( !preg_match('/\.(gif|jp[e]*g|png|bmp)$/', $file, $ext) ) {
+		if ( !preg_match('/\.(gif|jp[e]*g|png|bmp)$/', $file, $ext)) {
 			// not supported
 			return null;
 		}
 		$fileExt	= str_replace('jpg', 'jpeg', $ext[1]);
 		
-		if( $fileExt == 'bmp') {
-			//if (!function_exists('imagecreatefrombmp')) { 
-			//	$funcPrefix	= 'self::image';
-			//	$img		= self::imagecreatefrombmp( $file );
-			//}
-			//else {
-			//	$img		= imagecreatefrombmp( $file );
-			//}
-			
-			// disable for now
+		if ($fileExt == 'bmp') {
 			return null;
 		}
 		else {
@@ -59,7 +47,7 @@ final class Image
 		
 		// set compression quality
 		$compression	= 95;
-		switch( $fileExt ) {
+		switch( $fileExt) {
 			case 'png':
 				$compression	= 9;
 				break;
@@ -73,12 +61,12 @@ final class Image
 		$offsety	= 0;
 		
 		// Get image aspect ratio
-		if( $crop === true ) {
-			if($_w < $imgWidth) {
+		if ($crop === true) {
+			if ($_w < $imgWidth) {
 				$imgWidth	= $_w;
 			}
 			
-			if($_h < $imgHeight) {
+			if ($_h < $imgHeight) {
 				$imgHeight	= $_h;
 			}
 			
@@ -101,26 +89,26 @@ final class Image
 			$use_ratio	= true;
 			
 			// get crop info
-			if( is_array($crop) ) {
-				if( isset($crop['offsetx']) ) {
+			if (is_array($crop)) {
+				if (isset($crop['offsetx'])) {
 					$offsetx	= (int)$crop['offsetx'];
 				}
-				if( isset($crop['offsety']) ) {
+				if (isset($crop['offsety'])) {
 					$offsety	= (int)$crop['offsety'];
 				}
-				if( isset($crop['width']) ) {
+				if (isset($crop['width'])) {
 					$_w			= (int)$crop['width'];
 				}
-				if( isset($crop['height']) ) {
+				if (isset($crop['height'])) {
 					$_h			= (int)$crop['height'];
 				}
 				
-				if( isset($crop['no_ratio']) ) {
+				if (isset($crop['no_ratio'])) {
 					$use_ratio	= false;
 				}
 			}
 		
-			if( $use_ratio ) {
+			if ($use_ratio) {
 				$ratio	= ($_w / $_h);
 				if ($imgWidth <= $_w && ($imgWidth/$ratio) <= $imgHeight) {
 					$imgHeight	= $imgWidth/$ratio;
@@ -138,7 +126,7 @@ final class Image
 		// Create blank image
 		$tmpImage	= imagecreatetruecolor($imgWidth, $imgHeight);
 		$bg			= imagecolorallocate($tmpImage, 0xFF, 0xFF, 0xFF);
-		imagefill($tmpImage, 0, 0, $bg);
+		imagefill($tmpImage, 255, 255, $bg);
 		
 		// Resize image
 		imagecopyresampled($tmpImage, $img, 0, 0, $offsetx, $offsety, $imgWidth, $imgHeight, $_w, $_h);
@@ -148,13 +136,13 @@ final class Image
 		
 		// check if valid file dest, if not send to browser
 		$destPath	= dirname($dest);
-		if( !is_dir($destPath) ) {
+		if (!is_dir($destPath)) {
 			$dest	= null;
 		
 			// Set the content type header
 			header('Content-type: image/' .$fileExt);
 		}
-		if( !empty($prefix) ) {
+		if (!empty($prefix)) {
 			// get parts
 			$p	= pathinfo($file);
 			
@@ -325,32 +313,32 @@ final class Image
 		$Transparent = imagecolortransparent($img); 
 		$IsTransparent = $Transparent != -1; 
 		
-		if($IsTransparent) 
+		if ($IsTransparent) 
 			$ColorCount--; 
 			
 		$retd		= 0;
 		$BitCount 	= 1;
 		
-		if($ColorCount == 0) { 
+		if ($ColorCount == 0) { 
 			$ColorCount = 0; 
 			$BitCount = 24; 
 		} 
-		if(($ColorCount > 0) && ($ColorCount <= 2)) {
+		if (($ColorCount > 0) && ($ColorCount <= 2)) {
 			$ColorCount = 2; 
 			$BitCount = 1; 
 		} 
-		if(($ColorCount > 2) && ($ColorCount <= 16)) { 
+		if (($ColorCount > 2) && ($ColorCount <= 16)) { 
 			$ColorCount = 16; 
 			$BitCount = 4; 
 		} 
-		if(($ColorCount > 16) && ($ColorCount <= 256)) { 
+		if (($ColorCount > 16) && ($ColorCount <= 256)) { 
 			$ColorCount = 0; 
 			$BitCount = 8; 
 		} 
 		$Width = imageSX($img); 
 		$Height = imageSY($img); 
 		$Zbytek = (4 - ($Width / (8 / $BitCount)) % 4) % 4; 
-		if($BitCount < 24) 
+		if ($BitCount < 24) 
 		$palsize = pow(2, $BitCount) * 4; 
 		$size = (floor($Width / (8 / $BitCount)) + $Zbytek) * $Height + 54; 
 		$size += $palsize; 
@@ -375,11 +363,11 @@ final class Image
 		// image data 
 		$CC = $ColorCount; 
 		$sl1 = strlen($ret); 
-		if($CC == 0) $CC = 256; 
+		if ($CC == 0) $CC = 256; 
 		
-		if($BitCount < 24) {
+		if ($BitCount < 24) {
 			$ColorTotal = imagecolorstotal($img); 
-			if($IsTransparent) $ColorTotal--; 
+			if ($IsTransparent) $ColorTotal--; 
 			
 			for($p = 0; $p < $ColorTotal; $p++) { 
 				$color = imagecolorsforindex($img, $p); 
@@ -396,20 +384,20 @@ final class Image
 				$ret .= self::_int_to_byte(0); 
 			} 
 		} 
-		if($BitCount <= 8) { 
+		if ($BitCount <= 8) { 
 			for($y = $Height - 1; $y >= 0; $y--) { 
 				$bWrite = ""; 
 				for($x = 0; $x < $Width; $x++) { 
 					$color = imagecolorat($img, $x, $y); 
-					$bWrite .= self::_dec_to_bin$color, $BitCount); 
+					$bWrite .= self::_dec_to_bin($color, $BitCount); 
 					
-				if(strlen($bWrite) == 8) { 
+				if (strlen($bWrite) == 8) { 
 					$retd .= self::_int_to_byte(bindec($bWrite)); 
 					$bWrite = ""; 
 				} 
 			} 
 			
-			if((strlen($bWrite) < 8) and (strlen($bWrite) != 0)) { 
+			if ((strlen($bWrite) < 8) and (strlen($bWrite) != 0)) { 
 				$sl = strlen($bWrite); 
 				
 				for($t = 0; $t < 8 - $sl; $t++) $sl .= "0"; 
@@ -420,16 +408,16 @@ final class Image
 			} 
 		}
 		
-		if(($RLE == 1) and ($BitCount == 8)) { 
+		if (($RLE == 1) and ($BitCount == 8)) { 
 			for($t = 0; $t < strlen($retd); $t += 4) { 
-				if($t != 0) 
-					if(($t) % $Width == 0) $ret .= chr(0).chr(0); 
+				if ($t != 0) 
+					if (($t) % $Width == 0) $ret .= chr(0).chr(0); 
 					
-				if(($t + 5) % $Width == 0) { 
+				if (($t + 5) % $Width == 0) { 
 					$ret .= chr(0).chr(5).substr($retd, $t, 5).chr(0); 
 					$t += 1; 
 				} 
-				if(($t + 6) % $Width == 0) { 
+				if (($t + 6) % $Width == 0) { 
 					$ret .= chr(0).chr(6).substr($retd, $t, 6); 
 					$t += 2; 
 				} 
@@ -440,7 +428,7 @@ final class Image
 		} 
 		else $ret .= $retd; 
 		
-		if($BitCount == 24) { 
+		if ($BitCount == 24) { 
 			for($z = 0; $z < $Zbytek; $z++) $Dopl .= chr(0); 
 			
 			for($y = $Height - 1; $y >= 0; $y--) { 
@@ -452,7 +440,7 @@ final class Image
 			} 
 		} 
 		
-		if(fwrite(fopen($file, "wb"), $ret)) 
+		if (fwrite(fopen($file, "wb"), $ret)) 
 			return true; 
 		else 
 			return false; 
@@ -496,7 +484,7 @@ final class Image
 		@param $n int
 		@private
 	**/
-	function _dec_to_bin $d, $n )
+	function _dec_to_bin( $d, $n )
 	{
 		$bin	= decbin($d);
 		$sbin	= strlen($bin);
