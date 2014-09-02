@@ -239,6 +239,9 @@ class Model
 	**/
 	public function bind( $vars )
 	{
+		// re-init variables
+		$this->_initVars();
+		
 		// convert to array if type object
 		$vars	= $this->toArray($vars);
 	
